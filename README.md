@@ -1,5 +1,4 @@
 # LuckyGuess - Jogo de advinhação com perguntas em C
----
 
 ### A equipe
 |Nome|Perfil do Github|
@@ -21,8 +20,6 @@ Caso não acerte de primeira, o jogador poderá responder perguntas de conhecime
 Haverá um multiplicador de pontos, que será reduzido de **5x** até **1x** a cada 5 segundos. Cada pergunta vale **200 pts**, podendo ser multiplicados pergunta a pergunta até atingir a pontuação máxima de **10.000 pts**. 
 
 Ao atingir a pontuação máxima, o jogo se encerra e o jogador adiciona sua pergunta ao jogo.
-
----
 
 ## Informações técnicas
 
