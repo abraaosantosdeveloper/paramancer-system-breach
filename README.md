@@ -32,7 +32,7 @@ O jogo utiliza a linguagem de programação C, por ocasião da disciplina de **P
 ##### Bibliotecas externas
 O programa utiliza a biblioteca externa **TextUtils**, desenvolvida pelo discente Abraão F. Dos Santos, inicialmente em python, e portada para a linguagem C.
 
-**Link do repositório** 
+**Link do repositório:** 
 Para acessar a biblioteca utilizada e implementá-la em seus projetos, basta clicar no link: [Text Utils Library](https://github.com/abraaosantosdeveloper/text-utils-c-edition/)
 
 **Nota ao usuário:**
