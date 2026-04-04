@@ -1,9 +1,6 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#include "text_utils.h"
+#include "interfaces/menu.h"
 
-int main()
+int main(void)
 {
-    return 0;
+    return run_main_menu();
 }

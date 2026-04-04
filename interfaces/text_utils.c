@@ -134,8 +134,23 @@ void clear_screen(void)
 {
 #ifdef _WIN32
     ensure_terminal_ready();
-    fputs("\x1b[2J\x1b[H", stdout);
-    fflush(stdout);
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+        return;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD count;
+    DWORD cell_count;
+    COORD home_coords = {0, 0};
+
+    if (!GetConsoleScreenBufferInfo(hOut, &csbi))
+        return;
+
+    cell_count = (DWORD)(csbi.dwSize.X * csbi.dwSize.Y);
+
+    FillConsoleOutputCharacter(hOut, (TCHAR)' ', cell_count, home_coords, &count);
+    FillConsoleOutputAttribute(hOut, csbi.wAttributes, cell_count, home_coords, &count);
+    SetConsoleCursorPosition(hOut, home_coords);
 #else
     system("clear");
 #endif
