@@ -3,11 +3,12 @@
 ### A equipe
 |Nome|Perfil do Github|
 |---|---|
-|Abraão Filipi dos Santos |[@abraaosantosdeveloper](https://github.com/abraaosantosdeveloper/)|
-|Pedro Pessoa|[@pedropessoa]()|
-|Dilvanir Aline|[@aline]()||
-|Emanoel Alessandro|[@emanoel]()||
-|Marcio Aureliano|[@marcio]()||
+|Abraão Filipi dos Santos |[@abraaosantosdeveloper](https://github.com/abraaosantosdeveloper/)|DEV|
+|Pedro Pessoa|[@pedropessoa](https://github.com/Ppan-droid)|DEV|
+|Dilvanir Aline|[@aline](https://github.com/daacm-cele)||DESIGNER|
+|Emanoel Alessandro|[@emanoel]()|DEV|
+|Marcio Aureliano|[@marcio]()|SCRUM MASTER|
+|Maria Larysse|[@larysse]()|PO|
 ---
 ### Funcionamento do jogo
 
@@ -35,6 +36,10 @@ Para acessar a biblioteca utilizada e implementá-la em seus projetos, basta cli
 **Nota ao usuário:**
 
 >*O repositório original possui termos de uso descritos no arquivo **LICENSE**. Leia-o com atenção antes de utilizar a biblioteca.*
+
+![Descrição da imagem](./assets/back.png)
+
+![Descrição da imagem](./assets/quadro.png)   
 
 ## Como compilar
 
