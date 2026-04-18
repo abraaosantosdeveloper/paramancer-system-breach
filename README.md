@@ -1,4 +1,4 @@
-# LuckyGuess - Jogo de advinhação com perguntas em C
+![Logotipo](/assets/game_arts/logo.png)
 
 ### A equipe
 |Nome|Perfil do Github|
