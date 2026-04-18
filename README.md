@@ -6,7 +6,7 @@
 |Abraão Filipi dos Santos -- DEV |[@abraaosantosdeveloper](https://github.com/abraaosantosdeveloper/)||
 |Pedro Pessoa -- DEV |[@pedropessoa](https://github.com/Ppan-droid)||
 |Dilvanir Aline -- DESIGNER |[@aline](https://github.com/daacm-cele)|||
-|Emanoel Alessandro -- DEV |[@emanoel](https://github.com/emanoel0106)||
+|Emanoel Alessandro -- DEV |[@emanoel0106](https://github.com/emanoel0106)||
 |Marcio Aureliano -- TECH LEAD |[@marcio]()||
 |Maria Larysse -- PO |[@larysse]()||
 ---
