@@ -8,19 +8,19 @@
 |Dilvanir Aline -- DESIGNER |[@aline](https://github.com/daacm-cele)|||
 |Emanoel Alessandro -- DEV |[@emanoel0106](https://github.com/emanoel0106)||
 |Marcio Aureliano -- TECH LEAD |[@marcio]()||
-|Maria Larysse -- PO |[@larysse]()||
+|Maria Larysse -- PO |[@mlylp](https://github.com/mlylp)||
 ---
 ### Funcionamento do jogo
 
-A princípio, a aplicação deve sortear um número e o jogador deve advinhá-lo. Se não conseguir, o jogador terá que responder perguntas para receber pistas sobre seu chute, como por exemplo, se o seu palpite está acima ou abaixo do número sorteado. 
+Protagonista: Dex
+Antagonista: The Entity
 
-Se o jogador acertar de primeira, obtém a pontuação máxima, e poderá adicionar uma pergunta ao jogo. 
+Dex é um jovem que ama matemática e estatística, e ele tem um dom extraordinário: enxergar padrões matemáticos em tudo. Dex começa a perceber
+falhas no seu mundo: como se a “matrix” estivesse corrompida. Ele descobre que há uma Entidade corruptora, uma IA que rouba parâmetros do universo e, por
+isso, as falhas na “matrix” começaram a aparecer. Seu trabalho, é adivinhar estes parâmetros e devolvê-los à “matrix”, o que enfraquecerá a Entidade e restaurará a
+estabilidade do seu universo.
 
-Caso não acerte de primeira, o jogador poderá responder perguntas de conhecimentos gerais, podendo acumular um streak de perguntas corretas, e tendo a opção de pular a pergunta, caso não saiba a resposta. Assim, não perderá o streak acumulado.
-
-Haverá um multiplicador de pontos, que será reduzido de **5x** até **1x** a cada 5 segundos. Cada pergunta vale **200 pts**, podendo ser multiplicados pergunta a pergunta até atingir a pontuação máxima de **10.000 pts**. 
-
-Ao atingir a pontuação máxima, o jogo se encerra e o jogador adiciona sua pergunta ao jogo.
+A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acertá-lo para ganhar o jogo. Caso nao obtenha sucesso, ele recebe uma pergunta com opçoes de respostas. Se acertar a pergunta, o jogador causa dano ao oponente e recebe uma dica em relaçao ao número gerado pelo sistema que ele está buscando acertar. Caso ele erre a pergunta feita, o personagem protagonista recebe dano, e o jogador ganha mais uma chance de acertar o número alvo, mas sem receber dicas sobre ele.
 
 ## Informações técnicas
 
