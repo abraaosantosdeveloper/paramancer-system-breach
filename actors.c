@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 typedef struct
 {
     int health;         /* Always in integer: 1 - 100 - Each unit corresponds to half a heart */
