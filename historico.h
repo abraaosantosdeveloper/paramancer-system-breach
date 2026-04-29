@@ -3,12 +3,13 @@
 
 #include "tipos.h"
 
+// Caminho do arquivo CSV de historico.
 #define ARQUIVO_NOME "dados/historico.csv"
 
-// RF03 - Grava uma sessão no arquivo em formato CSV [cite: 27, 133]
+// Grava uma sessao no CSV de historico.
 void salvar_sessao(Session s);
 
-// RF04 - Lê todas as sessões do arquivo para análise [cite: 35]
+// Carrega sessoes do CSV para analise e exibicao.
 int carregar_historico(Session sessoes[], int max_sessoes);
 
 #endif

@@ -9,21 +9,31 @@
 |Emanoel Alessandro -- DEV |[@emanoel0106](https://github.com/emanoel0106)||
 |Marcio Aureliano -- TECH LEAD |[@marcio]()||
 |Maria Larysse -- PO |[@mlylp](https://github.com/mlylp)||
+<<<<<<< HEAD
 
 # Sobre o Jogo
+=======
+>>>>>>> e580bd69e74a8cdf25f5c73af4189e16bcefda79
 ---
 ## Protagonista: Dex
 ![Personagem](/assets/game_arts/actors/dex_idle.png)
 ## Antagonista: The Entity
 ![Personagem](/assets/game_arts/actors/the_entity.png)
 
+<<<<<<< HEAD
 
 ### História
+=======
+Protagonista: Dex
+Antagonista: The Entity
+
+>>>>>>> e580bd69e74a8cdf25f5c73af4189e16bcefda79
 Dex é um jovem que ama matemática e estatística, e ele tem um dom extraordinário: enxergar padrões matemáticos em tudo. Dex começa a perceber
 falhas no seu mundo: como se a “matrix” estivesse corrompida. Ele descobre que há uma Entidade corruptora, uma IA que rouba parâmetros do universo e, por
 isso, as falhas na “matrix” começaram a aparecer. Seu trabalho, é adivinhar estes parâmetros e devolvê-los à “matrix”, o que enfraquecerá a Entidade e restaurará a
 estabilidade do seu universo.
 
+<<<<<<< HEAD
 ## Fluxo do jogo
 A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acertá-lo para ganhar o jogo. Caso nao obtenha sucesso, ele recebe uma pergunta com opçoes de respostas. Se acertar a pergunta, o jogador causa dano ao oponente e recebe uma dica em relaçao ao número gerado pelo sistema que ele está buscando acertar. Caso ele erre a pergunta feita, o personagem protagonista recebe dano, e o jogador ganha mais uma chance de acertar o número alvo, mas sem receber dicas sobre ele.
 
@@ -44,6 +54,9 @@ Com este buffer, o usuário dará o dobro de dano ao inimigo.
 ![Buffer](/assets/game_arts/buffers/immunity.png)
 Com este buffer, ao errar uma pergunta caso o personagem não acerte o número (parâmetro) a ser advinhado, ele não perderá vida.
 
+=======
+A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acertá-lo para ganhar o jogo. Caso nao obtenha sucesso, ele recebe uma pergunta com opçoes de respostas. Se acertar a pergunta, o jogador causa dano ao oponente e recebe uma dica em relaçao ao número gerado pelo sistema que ele está buscando acertar. Caso ele erre a pergunta feita, o personagem protagonista recebe dano, e o jogador ganha mais uma chance de acertar o número alvo, mas sem receber dicas sobre ele.
+>>>>>>> e580bd69e74a8cdf25f5c73af4189e16bcefda79
 
 ## Informações técnicas
 

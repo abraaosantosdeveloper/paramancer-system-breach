@@ -1,3 +1,4 @@
+// Dados do personagem principal.
 typedef struct
 {
     int health;         /* Always in integer: 1 - 100 - Each unit corresponds to half a heart */
@@ -8,6 +9,7 @@ typedef struct
 
 } Dex;
 
+// Dados basicos das entidades inimigas.
 typedef struct
 {
     /* The propperties of the Entity follows the same pattern of the main character, Dex */
@@ -17,6 +19,7 @@ typedef struct
 
 } Entity;
 
+// Definicao de um buff aplicado ao jogador.
 typedef struct
 {
     int id;
@@ -25,6 +28,7 @@ typedef struct
 
 } Buffer;
 
+// Tabela fixa de buffs disponiveis para uso futuro no gameplay.
 Buffer buffers[3] = {
     {1, "Imunnity", "Wrong Answers Don't steal health points."},
     {2, "Critical", "Deals 2x Damage to the enemy."},
