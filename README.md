@@ -60,7 +60,7 @@ O programa utiliza a biblioteca externa **Raylib** para criação da interface.
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
 ## Histórias do Usuário 
-![Historias do usuario](/assets/dev_assets/historias_do_usuario.pdf)
+![Historias do usuario](/assets/dev_assets/historias_do_usuario_1.md)
 
 
 ### Em breve, mais conteúdo
