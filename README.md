@@ -112,9 +112,9 @@ O programa utiliza a biblioteca externa **Raylib** para criação da interface.
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
 ## Protótipo de Telas
-[Clique eveja o Protótipo de Telas](https://www.figma.com/board/l18BrfQ96FAK6J05IgYIHJ/Paramancer?t=xTz0ci4WMo4mZTHC-6)
+[Clique e veja o Protótipo de Telas](https://www.figma.com/board/l18BrfQ96FAK6J05IgYIHJ/Paramancer?t=xTz0ci4WMo4mZTHC-6)
 ## Diagrama de Funcionalidades
-[Clique e Veja o Diagrama de Funcionalidades](https://www.figma.com/board/JK40DU91HVrSUbO3iM6VsR/Sem-t%C3%ADtulo?node-id=0-1&t=d7VuU0cPzM0DuSLh-1) 
+[Clique e veja o Diagrama de Funcionalidades](https://www.figma.com/board/JK40DU91HVrSUbO3iM6VsR/Sem-t%C3%ADtulo?node-id=0-1&t=d7VuU0cPzM0DuSLh-1) 
 
 ## Histórias do Usuário 
 
