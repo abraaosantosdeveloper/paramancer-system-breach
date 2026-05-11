@@ -1,5 +1,7 @@
 ![Logotipo](/assets/game_arts/logo.png)
 
+[Relatório Evolutivo do Gerenciamento do Projeto](https://docs.google.com/document/d/1tXrJkRwiRk7mcsrKFEbNX1feVAYsyZjU/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true) 
+
 ### A equipe
 |Nome|Perfil do Github|
 |---|---|
