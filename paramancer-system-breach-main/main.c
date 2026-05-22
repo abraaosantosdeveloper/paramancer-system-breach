@@ -471,7 +471,7 @@ static void run_menu(Texture2D logoTexture,
 {
     // Scale the logo to fit the menu layout.
     float logoScale = 1.0f;
-    const float logoMaxWidth = 320.0f;
+    const float logoMaxWidth = 480.0f;
     if (logoTexture.width > (int)logoMaxWidth)
     {
         logoScale = logoMaxWidth / (float)logoTexture.width;
@@ -492,7 +492,7 @@ static void run_menu(Texture2D logoTexture,
     const int highlightPaddingY = 6;
 
     // Compute vertical layout of logo and menu.
-    int menuHeight = (itemCount - 1) * itemSpacing + fontSize;
+    int menuHeight = (itemCount + 1) * itemSpacing + fontSize;
 
     float logoWidth = logoTexture.width * logoScale;
     float logoHeight = logoTexture.height * logoScale;
