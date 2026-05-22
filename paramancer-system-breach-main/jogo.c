@@ -16,18 +16,25 @@
 #include "perguntas.h"
 #include "analise.h"
 #include "sorteio.h"
+#include "geracao.h"
+#include "map_render.h"
 
 // Global variables to keep last numeric guess and target for hint after question
 static int lastGuess = 0;
 static int lastTarget = 0;
 
 // Global resources (provided by main.c)
-extern Texture2D backgroundTexture;
 extern Music bgm;
 
 // Global character instances (defined here)
 Entity entity = {.health = 100, .spriteState = 0, .entityType = 0};
 Dex dex = {.health = 100, .buffer = 0, .spriteState = 0, .correctAnswers = 0, .score = 0};
+
+// Procedurally generated platform map (used during gameplay)
+char gameMap[MAP_ALTURA][MAP_LARGURA] = {0};
+
+// Floor tile texture for procedural map rendering
+Texture2D floorTexture = {0};
 
 // Text strings used in the game
 static const char *sistema[] = {
@@ -40,15 +47,16 @@ static const char *dialogo[] = {
     "vamo jogar um jogo de acertar numero humano patetico e zas e zas -entidade",
     "eu ajudo mano -zero"};
 
+// Forward declarations for helper functions
+static void draw_gameplay_background(void);
+
 // Helper: draw centered text with background and keep music playing
 static void draw_centered(const char *text, Color col)
 {
     // Keep music playing while rendering the centered message
     UpdateMusicStream(bgm);
-    // Draw the shared menu background
-    Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-    Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+    // Draw solid background (sky blue)
+    ClearBackground((Color){200, 140, 80, 255});
 
     // Choose font size – make sistema[0] a bit smaller, sistema[1] a bit smaller by 2
     int fontSize = 20;
@@ -104,10 +112,8 @@ static void warning(const char *msg)
             return;
         UpdateMusicStream(bgm);
         BeginDrawing();
-        // Background
-        Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Background with procedurally generated platforms
+        draw_gameplay_background();
         // Health HUD (same as other warnings)
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
@@ -142,10 +148,8 @@ static void victoryBox(void)
             return;
         UpdateMusicStream(bgm);
         BeginDrawing();
-        // Background
-        Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Background with procedurally generated platforms
+        draw_gameplay_background();
         // Victory message
         const char *msg = "parabens! dex venceu!";
         int msgFontSize = 20;
@@ -173,10 +177,8 @@ static void defeatBox(void)
             return;
         UpdateMusicStream(bgm);
         BeginDrawing();
-        // Background
-        Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Background with procedurally generated platforms
+        draw_gameplay_background();
         // Defeat message
         const char *msg = "que pena, a entidade venceu";
         int msgFontSize = 20;
@@ -191,6 +193,25 @@ static void defeatBox(void)
         DrawRectangleLinesEx(wbox, 2, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
         EndDrawing();
+    }
+}
+
+// Renders the gameplay background with procedurally generated platforms
+// Responsibilities: Clear screen with sky color and render floor tiles
+// Parameters: None (uses global gameMap and floorTexture)
+// Flow: 1) Draw sunset sky blue background 2) Render floor tiles from procedural map
+static void draw_gameplay_background(void)
+{
+    // Draw sky blue background
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){135, 206, 235, 255});
+
+    // Render the floor tiles anchored to the bottom
+    // floor.png is 64×128 pixels
+    // Map is 20 tiles × 1 row (1280px width × 128px height)
+    // Position at Y = 592 to place floor at bottom of 720px screen (720 - 128 = 592)
+    if (floorTexture.id != 0)
+    {
+        map_render_platforms(gameMap, floorTexture, 0.0f, 592.0f);
     }
 }
 
@@ -240,6 +261,8 @@ static void gameplay(void)
     lastTarget = target;   // store for hint after question
     char guessStr[4] = ""; // up to 3 digits
 
+    // Map and texture are pre-initialized at startup in main()
+
     while (true)
     {
         if (WindowShouldClose())
@@ -263,10 +286,8 @@ static void gameplay(void)
         // Keep music playing
         UpdateMusicStream(bgm);
         BeginDrawing();
-        // Draw shared background (same as intro)
-        Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Draw gameplay background with procedurally generated platforms
+        draw_gameplay_background();
         // Health displays (always visible)
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
@@ -323,7 +344,7 @@ static void gameplay(void)
             }
             else
             {
-                // Incorrect guess: show warning message for 4 seconds
+                // Incorrect guess: show background and health for 4 seconds, then ask question
                 double msgStart = GetTime();
                 while (GetTime() - msgStart < 4.0)
                 {
@@ -331,22 +352,28 @@ static void gameplay(void)
                         return;
                     UpdateMusicStream(bgm);
                     BeginDrawing();
-                    // Draw shared background (same as intro/gameplay)
-                    Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-                    Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-                    DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+                    // Draw gameplay background with procedurally generated platforms
+                    draw_gameplay_background();
                     // Redraw health HUD
                     DrawText(dexHealthStr, 20, 20, 20, WHITE);
                     DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
-                    // Warning message box
-                    warning("você terá uma chance de evitar o dano, acerte essa pergunta!");
+                    EndDrawing();
                 }
+                // Show warning message before question
+                warning("você terá uma chance de evitar o dano, acerte essa pergunta!");
                 // Call perguntas after warning
                 perguntas();
                 // Reset guess input for next attempt
                 guessStr[0] = '\0';
             }
         }
+    }
+
+    // Cleanup: unload the floor texture
+    if (floorTexture.id != 0)
+    {
+        UnloadTexture(floorTexture);
+        floorTexture = (Texture2D){0};
     }
 }
 
@@ -381,10 +408,8 @@ static void perguntas(void)
             return;
         UpdateMusicStream(bgm);
         BeginDrawing();
-        // Shared background
-        Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Background for question screen: Use gameplay background (sky color + floor tiles)
+        draw_gameplay_background();
         // Health HUD
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
@@ -475,9 +500,8 @@ static void perguntas(void)
                 return;
             UpdateMusicStream(bgm);
             BeginDrawing();
-            Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-            Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-            DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            // Background for warning screen: Use gameplay background (sky color + floor tiles)
+            draw_gameplay_background();
             char dexHealthStr[32];
             sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
             DrawText(dexHealthStr, 20, 20, 20, WHITE);
@@ -515,9 +539,8 @@ static void perguntas(void)
                 return;
             UpdateMusicStream(bgm);
             BeginDrawing();
-            Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-            Rectangle dst = {0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight()};
-            DrawTexturePro(backgroundTexture, src, dst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            // Background for success screen: Use gameplay background (sky color + floor tiles)
+            draw_gameplay_background();
             char dexHealthStr[32];
             sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
             DrawText(dexHealthStr, 20, 20, 20, WHITE);

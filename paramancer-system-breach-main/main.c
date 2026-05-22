@@ -1,9 +1,13 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <raylib.h>
 #include "historico.h"
 #include "jogo.h"
+#include "geracao.h"
+#include "map_render.h"
 
 // Simple state machine for the main menu flow.
 enum gameState
@@ -103,25 +107,15 @@ static Font load_ui_font_from_path(const char *path, int baseSize, bool *outIsDe
     return font;
 }
 
-// Loads the menu textures used in the background and mascot.
-static int load_menu_textures(Texture2D *backgroundTexture, Texture2D *logoTexture)
+// Loads the menu textures (logo only, scenario.png removed for procedural rendering).
+static int load_menu_textures(Texture2D *logoTexture)
 {
-    // Load background, logo, and mascot textures.
-    *backgroundTexture = LoadTexture("assets/game_arts/scenario/scenario.png");
-    *logoTexture = LoadTexture("assets/game_arts/Logo_no-bg.png");
+    // Load logo texture only.
+    *logoTexture = LoadTexture("assets/game_arts/logo.png");
 
-    // Guard against partial loads and release any successful handles.
-    if (backgroundTexture->id == 0 || logoTexture->id == 0)
+    // Guard against load failures.
+    if (logoTexture->id == 0)
     {
-        // Se algo falhar, descarrega o que foi aberto para evitar vazamentos.
-        if (backgroundTexture->id != 0)
-        {
-            UnloadTexture(*backgroundTexture);
-        }
-        if (logoTexture->id != 0)
-        {
-            UnloadTexture(*logoTexture);
-        }
         return 0;
     }
 
@@ -129,10 +123,9 @@ static int load_menu_textures(Texture2D *backgroundTexture, Texture2D *logoTextu
 }
 
 // Releases the menu textures loaded at startup.
-static void unload_menu_textures(Texture2D backgroundTexture, Texture2D logoTexture)
+static void unload_menu_textures(Texture2D logoTexture)
 {
-    // Free all menu textures.
-    UnloadTexture(backgroundTexture);
+    // Free logo texture only (scenario.png removed).
     UnloadTexture(logoTexture);
 }
 
@@ -470,8 +463,7 @@ static void draw_stats_screen(Font titleFont,
 }
 
 // Runs the main menu loop, handling input, states, and rendering.
-static void run_menu(Texture2D backgroundTexture,
-                     Texture2D logoTexture,
+static void run_menu(Texture2D logoTexture,
                      Font uiFontBold,
                      Font uiFontLight,
                      int screenWidth,
@@ -677,12 +669,7 @@ static void run_menu(Texture2D backgroundTexture,
 
             // Render background and stats screen.
             BeginDrawing();
-            ClearBackground(RAYWHITE);
-
-            // Draw the backdrop and the stats table.
-            Rectangle bgSrc = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-            Rectangle bgDst = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-            DrawTexturePro(backgroundTexture, bgSrc, bgDst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            ClearBackground((Color){50, 50, 100, 255}); // Dark blue background for stats screen
 
             draw_stats_screen(uiFontBold, uiFontLight, sessions, sessionCount, statsScroll, rowsPerPage, screenWidth, screenHeight);
             EndDrawing();
@@ -707,14 +694,16 @@ static void run_menu(Texture2D backgroundTexture,
             }
         }
 
-        // Render menu background and contents.
+        // Render menu with floor background.
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-
-        // Draw menu background and mascot.
-        Rectangle bgSrc = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
-        Rectangle bgDst = {0.0f, 0.0f, (float)screenWidth, (float)screenHeight};
-        DrawTexturePro(backgroundTexture, bgSrc, bgDst, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        // Draw sky blue background
+        DrawRectangle(0, 0, screenWidth, screenHeight, (Color){135, 206, 235, 255});
+        // Render tiled floor at the bottom (20 tiles × 1 row = 1280px width × 128px height)
+        // Position at Y = 592 to anchor floor at bottom of 720px screen (720 - 128 = 592)
+        if (floorTexture.id != 0)
+        {
+            map_render_platforms(gameMap, floorTexture, 0.0f, 592.0f);
+        }
 
         // Draw the game logo.
         float logoX = (screenWidth - logoWidth) / 2.0f;
@@ -784,20 +773,28 @@ static void run_menu(Texture2D backgroundTexture,
     }
 }
 
-Texture2D backgroundTexture; // Global shared background for menu and gameplay
 Music bgm; // Global shared music for menu and gameplay
 
 int main(void)
 {
     // Window setup.
-    const int screenWidth = 900;
-    const int screenHeight = 800;
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
 
     // Initialize the window and frame rate.
     InitWindow(screenWidth, screenHeight, "Paramancer");
     InitAudioDevice();
     SetExitKey(KEY_NULL);
     SetTargetFPS(60);
+
+    // Initialize procedural map at startup (used across menu and gameplay)
+    srand((unsigned int)time(NULL));
+    gerar_plataformas(gameMap);
+    floorTexture = map_load_floor_texture();
+    if (floorTexture.id == 0)
+    {
+        fprintf(stderr, "[WARNING] Could not load floor texture. Menu will use solid background.\n");
+    }
 
     // Load and start background music.
     bgm = LoadMusicStream("assets/audio/soundtrack.mp3");
@@ -806,7 +803,7 @@ int main(void)
     // Load textures required by the menu.
     Texture2D logoTexture;
     // Abort early if any texture fails to load.
-    if (!load_menu_textures(&backgroundTexture, &logoTexture))
+    if (!load_menu_textures(&logoTexture))
     {
         CloseWindow();
         return 1;
@@ -819,7 +816,7 @@ int main(void)
     Font uiFontLight = load_ui_font_from_path("assets/fonts/Pixeloid/PixeloidSans.ttf", 30, &lightIsDefault);
 
     // Run the menu loop until exit.
-    run_menu(backgroundTexture, logoTexture, uiFontBold, uiFontLight, screenWidth, screenHeight, bgm);
+    run_menu(logoTexture, uiFontBold, uiFontLight, screenWidth, screenHeight, bgm);
 
     // Release assets.
     if (!boldIsDefault)
@@ -832,8 +829,9 @@ int main(void)
     }
 
     // Cleanup texture resources.
+    UnloadTexture(floorTexture);
     UnloadMusicStream(bgm);
-    unload_menu_textures(backgroundTexture, logoTexture);
+    unload_menu_textures(logoTexture);
     CloseAudioDevice();
     CloseWindow();
     return 0;

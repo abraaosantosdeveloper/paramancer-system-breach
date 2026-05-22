@@ -5,12 +5,14 @@
 #include <raylib.h>
 // Additional include for editors that may not see the Makefile include flags
 #include "actors.h"
+#include "geracao.h"
 
 // Global instances defined in jogo.c
 extern Entity entity;
 extern Dex dex;
-extern Texture2D backgroundTexture;
 extern Music bgm;
+extern char gameMap[MAP_ALTURA][MAP_LARGURA];
+extern Texture2D floorTexture;
 
 // API do loop principal do jogo em modo console.
 
