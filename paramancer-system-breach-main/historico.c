@@ -34,7 +34,7 @@ void salvar_sessao(Session s)
     }
 
     // Formato: timestamp;alvo;tentativas;baixos;altos;palpites_csv [cite: 123, 125]
-    fprintf(f, "%s;%d;%d;%d;%d;", s.timestamp, s.target, s.attempts_count, s.low_count, s.high_count);
+    fprintf(f, "%s;%d;%d;%d;%d;", s.timestamp, s.target, s.attempts_count, s.high_count, s.low_count);
 
     // Serializa os palpites como CSV dentro do campo final.
     for (int i = 0; i < s.attempts_count; i++)
@@ -72,7 +72,7 @@ int carregar_historico(Session sessoes[], int max_sessoes)
         // Le campos basicos; os palpites ficam no CSV mas nao sao expandidos aqui.
         sscanf(linha, "%[^;];%d;%d;%d;%d;%s",
                s->timestamp, &s->target, &s->attempts_count,
-               &s->low_count, &s->high_count, palpites_raw);
+               &s->high_count, &s->low_count, palpites_raw);
 
         // Avanca para a proxima sessao.
         count++;

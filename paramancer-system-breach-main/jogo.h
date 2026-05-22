@@ -4,7 +4,6 @@
 #include "tipos.h"
 #include <raylib.h>
 // Additional include for editors that may not see the Makefile include flags
-#include "raylib/raylib/src/raylib.h"
 #include "actors.h"
 
 // Global instances defined in jogo.c

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make *)",
+      "Bash(mingw32-make *)"
+    ]
+  }
+}

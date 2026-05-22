@@ -488,8 +488,8 @@ static void run_menu(Texture2D backgroundTexture,
     // Menu items and locked entries.
     const char *items[] = {"Jogar", "Estatísticas", "Sair"};
     const int itemCount = (int)(sizeof(items) / sizeof(items[0]));
-    const int emBreveIndices[] = {0};
-    const int emBreveCount = 1;
+    const int emBreveIndices[] = {};
+    const int emBreveCount = 0;
 
     // Layout constants for typography and mascot.
     const int fontSize = 32;

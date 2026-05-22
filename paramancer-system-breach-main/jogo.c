@@ -6,7 +6,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <raylib.h>
-
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -27,21 +26,19 @@ extern Texture2D backgroundTexture;
 extern Music bgm;
 
 // Global character instances (defined here)
-Entity entity = { .health = 100, .spriteState = 0, .entityType = 0 };
-Dex    dex    = { .health = 100, .buffer = 0, .spriteState = 0, .correctAnswers = 0, .score = 0 };
+Entity entity = {.health = 100, .spriteState = 0, .entityType = 0};
+Dex dex = {.health = 100, .buffer = 0, .spriteState = 0, .correctAnswers = 0, .score = 0};
 
 // Text strings used in the game
 static const char *sistema[] = {
     "Bem-vindo ao System Breach! Prepare-se para uma jornada de perguntas e respostas sobre segurança cibernética.",
     "Você está pronto para testar seus conhecimentos e se tornar um mestre da segurança digital?",
-    "Vamos começar! Boa sorte!"
-};
+    "Vamos começar! Boa sorte!"};
 
 static const char *dialogo[] = {
     "eu sou a entidade e bla bla bla -entidade",
     "vamo jogar um jogo de acertar numero humano patetico e zas e zas -entidade",
-    "eu ajudo mano -zero"
-};
+    "eu ajudo mano -zero"};
 
 // Helper: draw centered text with background and keep music playing
 static void draw_centered(const char *text, Color col)
@@ -55,15 +52,23 @@ static void draw_centered(const char *text, Color col)
 
     // Choose font size – make sistema[0] a bit smaller, sistema[1] a bit smaller by 2
     int fontSize = 20;
-    if (strcmp(text, sistema[0]) == 0) {
+    if (strcmp(text, sistema[0]) == 0)
+    {
         fontSize = 14; // slightly smaller for the first message
-    } else if (strcmp(text, sistema[1]) == 0) {
+    }
+    else if (strcmp(text, sistema[1]) == 0)
+    {
         fontSize = 18; // two points smaller for the second message
     }
     // Detect if the text comes from dialogo array
     bool isDialog = false;
-    for (int i = 0; i < 3; ++i) {
-        if (strcmp(text, dialogo[i]) == 0) { isDialog = true; break; }
+    for (int i = 0; i < 3; ++i)
+    {
+        if (strcmp(text, dialogo[i]) == 0)
+        {
+            isDialog = true;
+            break;
+        }
     }
     // Measure text width
     int txtWidth = MeasureText(text, fontSize);
@@ -78,8 +83,7 @@ static void draw_centered(const char *text, Color col)
         (float)(x - padding),
         (float)(y - padding),
         (float)(txtWidth + 2 * padding),
-        (float)(fontSize + 2 * padding)
-    };
+        (float)(fontSize + 2 * padding)};
 
     // Draw a black filled rectangle as background for the text
     DrawRectangleRec(border, BLACK);
@@ -96,7 +100,8 @@ static void warning(const char *msg)
     double start = GetTime();
     while (GetTime() - start < 4.0)
     {
-        if (WindowShouldClose()) return;
+        if (WindowShouldClose())
+            return;
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background
@@ -119,7 +124,7 @@ static void warning(const char *msg)
         int boxH = msgFontSize + 2 * pad;
         int boxX = (GetScreenWidth() - boxW) / 2;
         int boxY = (GetScreenHeight() - boxH) / 2;
-        Rectangle wbox = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+        Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
         DrawRectangleLinesEx(wbox, 2, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
@@ -133,7 +138,8 @@ static void victoryBox(void)
     double start = GetTime();
     while (GetTime() - start < 3.0)
     {
-        if (WindowShouldClose()) return;
+        if (WindowShouldClose())
+            return;
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background
@@ -149,7 +155,7 @@ static void victoryBox(void)
         int boxH = msgFontSize + 2 * pad;
         int boxX = (GetScreenWidth() - boxW) / 2;
         int boxY = (GetScreenHeight() - boxH) / 2;
-        Rectangle wbox = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+        Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
         DrawRectangleLinesEx(wbox, 2, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
@@ -163,7 +169,8 @@ static void defeatBox(void)
     double start = GetTime();
     while (GetTime() - start < 3.0)
     {
-        if (WindowShouldClose()) return;
+        if (WindowShouldClose())
+            return;
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background
@@ -179,7 +186,7 @@ static void defeatBox(void)
         int boxH = msgFontSize + 2 * pad;
         int boxX = (GetScreenWidth() - boxW) / 2;
         int boxY = (GetScreenHeight() - boxH) / 2;
-        Rectangle wbox = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+        Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
         DrawRectangleLinesEx(wbox, 2, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
@@ -195,10 +202,13 @@ static void introducao(void)
     const int total = 6;
     const float displayTime = 4.0f; // seconds per message
 
-    for (int i = 0; i < total; ++i) {
+    for (int i = 0; i < total; ++i)
+    {
         double start = GetTime(); // Raylib timer in seconds
-        while (true) {
-            if (WindowShouldClose()) return; // graceful exit
+        while (true)
+        {
+            if (WindowShouldClose())
+                return; // graceful exit
 
             // Keep music playing while messages are displayed
             UpdateMusicStream(bgm);
@@ -209,7 +219,8 @@ static void introducao(void)
             EndDrawing();
 
             // Exit loop after the desired display time has elapsed
-            if ((GetTime() - start) >= displayTime) break;
+            if ((GetTime() - start) >= displayTime)
+                break;
         }
     }
 }
@@ -226,17 +237,23 @@ static void gameplay(void)
     strftime(sess.timestamp, sizeof(sess.timestamp), "%Y-%m-%d %H:%M:%S", tm_info);
     int target = sortearNumero(); // 1..100
     sess.target = target;
-    lastTarget = target; // store for hint after question
+    lastTarget = target;   // store for hint after question
     char guessStr[4] = ""; // up to 3 digits
 
-    while (true) {
-        if (WindowShouldClose()) return;
+    while (true)
+    {
+        if (WindowShouldClose())
+            return;
         // Interrupt if any character health reaches zero
-        if (dex.health <= 0 || entity.health <= 0) {
-            if (entity.health <= 0 && dex.health > 0) {
+        if (dex.health <= 0 || entity.health <= 0)
+        {
+            if (entity.health <= 0 && dex.health > 0)
+            {
                 // Dex wins – show victory box for 3 seconds
                 victoryBox();
-            } else if (dex.health <= 0 && entity.health > 0) {
+            }
+            else if (dex.health <= 0 && entity.health > 0)
+            {
                 // Dex loses – show defeat box for 3 seconds
                 defeatBox();
             }
@@ -264,7 +281,7 @@ static void gameplay(void)
         const int rectHeight = 150;
         int rectX = (GetScreenWidth() - rectWidth) / 2;
         int rectY = (GetScreenHeight() - rectHeight) / 2;
-        Rectangle rect = { (float)rectX, (float)rectY, (float)rectWidth, (float)rectHeight };
+        Rectangle rect = {(float)rectX, (float)rectY, (float)rectWidth, (float)rectHeight};
         DrawRectangleRec(rect, BLACK);
         DrawRectangleLinesEx(rect, 2, BLACK);
         const char *prompt = "Digite um número (1-100) e pressione ENTER:";
@@ -275,18 +292,25 @@ static void gameplay(void)
         EndDrawing();
 
         int key = GetKeyPressed();
-        if (key >= 48 && key <= 57) { // 0-9
-            if (strlen(guessStr) < 3) {
+        if (key >= 48 && key <= 57)
+        { // 0-9
+            if (strlen(guessStr) < 3)
+            {
                 size_t len = strlen(guessStr);
                 guessStr[len] = (char)key;
-                guessStr[len+1] = '\0';
+                guessStr[len + 1] = '\0';
             }
-        } else if (key == KEY_BACKSPACE && strlen(guessStr) > 0) {
-            guessStr[strlen(guessStr)-1] = '\0';
-        } else if (IsKeyPressed(KEY_ENTER) && strlen(guessStr) > 0) {
+        }
+        else if (key == KEY_BACKSPACE && strlen(guessStr) > 0)
+        {
+            guessStr[strlen(guessStr) - 1] = '\0';
+        }
+        else if (IsKeyPressed(KEY_ENTER) && strlen(guessStr) > 0)
+        {
             int guess = atoi(guessStr);
             lastGuess = guess;
-            if (guess == target) {
+            if (guess == target)
+            {
                 // Correct guess: damage entity
                 entity.health -= 100;
                 warning("a entidade tomou dano!!");
@@ -296,11 +320,15 @@ static void gameplay(void)
                 lastTarget = target;
                 guessStr[0] = '\0';
                 continue;
-            } else {
+            }
+            else
+            {
                 // Incorrect guess: show warning message for 4 seconds
                 double msgStart = GetTime();
-                while (GetTime() - msgStart < 4.0) {
-                    if (WindowShouldClose()) return;
+                while (GetTime() - msgStart < 4.0)
+                {
+                    if (WindowShouldClose())
+                        return;
                     UpdateMusicStream(bgm);
                     BeginDrawing();
                     // Draw shared background (same as intro/gameplay)
@@ -327,23 +355,30 @@ static void perguntas(void)
 {
     // Determine total number of questions in CSV
     FILE *file = fopen("perguntas.csv", "r");
-    if (!file) return;
+    if (!file)
+        return;
     int total = 0;
     char line[512];
-    while (fgets(line, sizeof(line), file)) {
-        if (strlen(line) > 1) total++;
+    while (fgets(line, sizeof(line), file))
+    {
+        if (strlen(line) > 1)
+            total++;
     }
     fclose(file);
-    if (total == 0) return;
+    if (total == 0)
+        return;
     // Choose a random question (1‑based index)
     int id = rand() % total + 1;
     Pergunta p;
-    if (!carregar_pergunta_por_id(id, &p)) return;
+    if (!carregar_pergunta_por_id(id, &p))
+        return;
 
     char playerChoice = '\0';
     bool answered = false;
-    while (!answered) {
-        if (WindowShouldClose()) return;
+    while (!answered)
+    {
+        if (WindowShouldClose())
+            return;
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Shared background
@@ -362,7 +397,7 @@ static void perguntas(void)
         const int boxW = 600, boxH = 200;
         int boxX = (GetScreenWidth() - boxW) / 2;
         int boxY = (GetScreenHeight() - boxH) / 2;
-        Rectangle box = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+        Rectangle box = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(box, BLACK);
         DrawRectangleLinesEx(box, 2, BLACK);
         // Render question and options
@@ -384,7 +419,8 @@ static void perguntas(void)
         DrawText(optBuf, boxX + 20, lineY, fontSize, WHITE);
         lineY += fontSize + 10;
         // Show selected input if any
-        if (playerChoice) {
+        if (playerChoice)
+        {
             char selBuf[32];
             sprintf(selBuf, "Sua escolha: %c", playerChoice);
             DrawText(selBuf, boxX + 20, lineY, fontSize, WHITE);
@@ -392,12 +428,16 @@ static void perguntas(void)
         EndDrawing();
 
         int k = GetKeyPressed();
-        if (k >= 65 && k <= 68) { // A-D
+        if (k >= 65 && k <= 68)
+        { // A-D
             playerChoice = (char)tolower(k);
-        } else if (k >= 97 && k <= 100) { // a-d
+        }
+        else if (k >= 97 && k <= 100)
+        { // a-d
             playerChoice = (char)k;
         }
-        if (IsKeyPressed(KEY_ENTER) && playerChoice) {
+        if (IsKeyPressed(KEY_ENTER) && playerChoice)
+        {
             answered = true;
         }
     }
@@ -405,20 +445,34 @@ static void perguntas(void)
     // Evaluate answer
     // Use case‑insensitive comparison by converting both to lower case
     char correctLower = (char)tolower(p.correta);
-    if (playerChoice != correctLower) {
+    if (playerChoice != correctLower)
+    {
         // Incorrect answer – apply damage to Dex and show warning box
         dex.health -= 20;
         const char *correctText = "";
-        switch (toupper(correctLower)) {
-            case 'A': correctText = p.alt_a; break;
-            case 'B': correctText = p.alt_b; break;
-            case 'C': correctText = p.alt_c; break;
-            case 'D': correctText = p.alt_d; break;
-            default:  correctText = ""; break;
+        switch (toupper(correctLower))
+        {
+        case 'A':
+            correctText = p.alt_a;
+            break;
+        case 'B':
+            correctText = p.alt_b;
+            break;
+        case 'C':
+            correctText = p.alt_c;
+            break;
+        case 'D':
+            correctText = p.alt_d;
+            break;
+        default:
+            correctText = "";
+            break;
         }
         double warnStart = GetTime();
-        while (GetTime() - warnStart < 4.0) {
-            if (WindowShouldClose()) return;
+        while (GetTime() - warnStart < 4.0)
+        {
+            if (WindowShouldClose())
+                return;
             UpdateMusicStream(bgm);
             BeginDrawing();
             Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
@@ -443,18 +497,22 @@ static void perguntas(void)
             int boxH = msgFontSize * 2 + 3 * pad;
             int boxX = (GetScreenWidth() - boxW) / 2;
             int boxY = (GetScreenHeight() - boxH) / 2;
-            Rectangle wbox = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+            Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
             DrawRectangleRec(wbox, BLACK);
             DrawRectangleLinesEx(wbox, 2, WHITE);
             DrawText(msg1, boxX + pad, boxY + pad, msgFontSize, WHITE);
             DrawText(msg2, boxX + pad, boxY + pad + msgFontSize + pad, msgFontSize, WHITE);
             EndDrawing();
         }
-    } else {
+    }
+    else
+    {
         // Correct answer – show success box with hint about previous numeric guess
         double winStart = GetTime();
-        while (GetTime() - winStart < 4.0) {
-            if (WindowShouldClose()) return;
+        while (GetTime() - winStart < 4.0)
+        {
+            if (WindowShouldClose())
+                return;
             UpdateMusicStream(bgm);
             BeginDrawing();
             Rectangle src = {0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height};
@@ -469,11 +527,16 @@ static void perguntas(void)
             DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
             const char *msg1 = "Você acertou a pergunta!";
             char hint[128];
-            if (lastGuess < lastTarget) {
+            if (lastGuess < lastTarget)
+            {
                 strcpy(hint, "Dica: o número que você chutou era muito baixo.");
-            } else if (lastGuess > lastTarget) {
+            }
+            else if (lastGuess > lastTarget)
+            {
                 strcpy(hint, "Dica: o número que você chutou era muito alto.");
-            } else {
+            }
+            else
+            {
                 strcpy(hint, "Dica: o número que você chutou era exatamente o alvo.");
             }
             int msgFontSize = 20;
@@ -485,7 +548,7 @@ static void perguntas(void)
             int boxH = msgFontSize * 2 + 3 * pad;
             int boxX = (GetScreenWidth() - boxW) / 2;
             int boxY = (GetScreenHeight() - boxH) / 2;
-            Rectangle wbox = { (float)boxX, (float)boxY, (float)boxW, (float)boxH };
+            Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
             DrawRectangleRec(wbox, BLACK);
             DrawRectangleLinesEx(wbox, 2, WHITE);
             DrawText(msg1, boxX + pad, boxY + pad, msgFontSize, WHITE);
@@ -494,7 +557,6 @@ static void perguntas(void)
         }
     }
 }
-
 
 // Public API – runs the full flow (intro then gameplay)
 Session executar_partida()
