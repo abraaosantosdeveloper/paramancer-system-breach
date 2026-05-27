@@ -1,4 +1,5 @@
 #include "analise.h"
+#include "historico.h"
 #include <math.h>
 
 // Funcoes de analise para estatisticas das partidas.
@@ -59,4 +60,44 @@ Stats processar_historico(Session sessoes[], int n)
 
     // Retorna as estatísticas calculadas.
     return st;
+}
+
+// Calcula a média das tentativas.
+double calcular_media_tentativas(Session sessoes[], int n)
+{
+    if (n <= 0) return 0.0;
+    return (double)soma_tentativas_recursiva(sessoes, n) / n;
+}
+
+// Calcula o desvio padrão das tentativas.
+double calcular_stddev_tentativas(Session sessoes[], int n)
+{
+    if (n <= 0) return 0.0;
+    double media = calcular_media_tentativas(sessoes, n);
+    double soma_q = soma_quadrados_recursiva(sessoes, n, media);
+    double result = sqrt(soma_q / n);
+    // Update best and worst attempts already handled in processar_historico.
+    return result;
+}
+
+// Retorna o número de tentativas da melhor (menor) sessão.
+int melhor_sessao_attempts(Session sessoes[], int n)
+{
+    if (n <= 0) return 0;
+    int best = sessoes[0].attempts_count;
+    for (int i = 1; i < n; ++i) {
+        if (sessoes[i].attempts_count < best) best = sessoes[i].attempts_count;
+    }
+    return best;
+}
+
+// Retorna o número de tentativas da pior (maior) sessão.
+int pior_sessao_attempts(Session sessoes[], int n)
+{
+    if (n <= 0) return 0;
+    int worst = sessoes[0].attempts_count;
+    for (int i = 1; i < n; ++i) {
+        if (sessoes[i].attempts_count > worst) worst = sessoes[i].attempts_count;
+    }
+    return worst;
 }
