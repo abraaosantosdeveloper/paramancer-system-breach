@@ -3,13 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <raylib.h>
+#include "raylib.h"
 #include "historico.h"
 #include "jogo.h"
 #include "geracao.h"
 #include "map_render.h"
+#include "analise.h"
+static Texture2D cidade = {0};
 
 // Simple state machine for the main menu flow.
+// duplicate removed - using earlier definition
 enum gameState
 {
     idle,         // Menu idle state.
@@ -173,11 +176,11 @@ static StatsLayout build_stats_layout(Font titleFont, Font bodyFont, int screenW
     const char *title = "Estatísticas";
     const char *footer = "Esc para voltar";
 
-    // Font sizes and padding for the stats table.
-    layout.titleFontSize = 22;
-    layout.headerFontSize = 16;
-    layout.rowFontSize = 16;
-    layout.footerFontSize = 16;
+    // Font sizes reduced to 70% of original.
+    layout.titleFontSize = (int)(22 * 1);
+    layout.headerFontSize = (int)(16 * 1);
+    layout.rowFontSize = (int)(16 * 1);
+    layout.footerFontSize = (int)(16 * 1.0);
     layout.innerPadding = 12.0f;
 
     // Measure text sizes for layout calculations.
@@ -620,7 +623,7 @@ static void run_menu(Texture2D logoTexture,
             // Stats view: lazy-load data, handle scroll, and render.
             if (!statsLoaded)
             {
-                // Carrega o historico ao entrar na tela para manter o menu leve.
+                // Carrega o histórico ao entrar na tela para manter o menu leve.
                 sessionCount = carregar_historico(sessions, (int)(sizeof(sessions) / sizeof(sessions[0])));
                 statsScroll = 0;
                 statsLoaded = true;
@@ -632,6 +635,12 @@ static void run_menu(Texture2D logoTexture,
             if (rowsPerPage < 1)
             {
                 rowsPerPage = 1;
+            }
+
+            // Compute aggregated statistics.
+            Stats overallStats = {0};
+            if (sessionCount > 0) {
+                overallStats = processar_historico(sessions, sessionCount);
             }
 
             // Scroll input for the stats list.
@@ -669,7 +678,50 @@ static void run_menu(Texture2D logoTexture,
 
             // Render background and stats screen.
             BeginDrawing();
-            ClearBackground((Color){50, 50, 100, 255}); // Dark blue background for stats screen
+            // Clear to sky blue then draw background texture if available
+            ClearBackground((Color){135, 206, 235, 255});
+            if (backgroundTexture.id != 0) {
+                DrawTexture(backgroundTexture, 0, 0, WHITE);
+            }
+
+            // Draw overall statistics summary at top.
+            // Left-aligned average attempts.
+            char avgStr[64];
+            snprintf(avgStr, sizeof(avgStr), "Média tentativas: %.2f", overallStats.average_attempts);
+            // Right-aligned standard deviation.
+            char stdStr[64];
+            snprintf(stdStr, sizeof(stdStr), "Desvio padrão: %.2f", overallStats.stddev_attempts);
+            // Left-aligned best attempts.
+            char bestStr[64];
+            snprintf(bestStr, sizeof(bestStr), "Melhor sessão: %d", overallStats.best_attempts);
+            // Right-aligned worst attempts.
+            char worstStr[64];
+            snprintf(worstStr, sizeof(worstStr), "Pior sessão: %d", overallStats.worst_attempts);
+            float summaryY = 24.0f;
+            // Positions
+            float leftMargin = 20.0f;
+            float avgX = leftMargin;
+            // Compute title X for centering
+            float titleX = (screenWidth - layout.titleSize.x) / 2.0f;
+            float stdX = screenWidth - MeasureTextEx(uiFontBold, stdStr, (float)layout.titleFontSize, 1.0f).x - leftMargin;
+            // Draw summary: avg and best on left side, std and worst on right side (same vertical position)
+            // Average attempts (left)
+            draw_text_outlined(uiFontBold, avgStr, (Vector2){avgX, summaryY}, (float)layout.titleFontSize, 1.0f, TEXT_COLOR, OUTLINE_COLOR, 2);
+            // Best session placed to the right of average, with a small gap
+            float bestXPos = avgX + MeasureTextEx(uiFontBold, avgStr, (float)layout.titleFontSize, 1.0f).x + 20.0f;
+            draw_text_outlined(uiFontBold, bestStr, (Vector2){bestXPos, summaryY}, (float)layout.titleFontSize, 1.0f, TEXT_COLOR, OUTLINE_COLOR, 2);
+            // Standard deviation (right side)
+            draw_text_outlined(uiFontBold, stdStr, (Vector2){stdX, summaryY}, (float)layout.titleFontSize, 1.0f, TEXT_COLOR, OUTLINE_COLOR, 2);
+            // Position "Pior sessão" right after the title "Estatísticas"
+            float worstXPos = titleX + layout.titleSize.x + 20.0f; // 20px gap after title
+            draw_text_outlined(uiFontBold, worstStr, (Vector2){worstXPos, summaryY}, (float)layout.titleFontSize, 1.0f, TEXT_COLOR, OUTLINE_COLOR, 2);
+
+            // Adjust layout downwards for table with extra padding to avoid overlapping summary.
+            float extraShift = layout.titleFontSize + 24.0f; // increased padding
+            layout.container.y += extraShift;
+            layout.container.height -= extraShift;
+            layout.headerRow.y += extraShift;
+            layout.rowsClip.y += extraShift;
 
             draw_stats_screen(uiFontBold, uiFontLight, sessions, sessionCount, statsScroll, rowsPerPage, screenWidth, screenHeight);
             EndDrawing();
@@ -696,8 +748,8 @@ static void run_menu(Texture2D logoTexture,
 
         // Render menu with floor background.
         BeginDrawing();
-        // Draw sky blue background
-        DrawRectangle(0, 0, screenWidth, screenHeight, (Color){135, 206, 235, 255});
+        // Use dark blue background for the menu.
+        ClearBackground((Color){0, 0, 139, 255}); // dark blue
         // Render tiled floor at the bottom (20 tiles × 1 row = 1280px width × 128px height)
         // Position at Y = 592 to anchor floor at bottom of 720px screen (720 - 128 = 592)
         if (floorTexture.id != 0)
@@ -791,6 +843,12 @@ int main(void)
     srand((unsigned int)time(NULL));
     gerar_plataformas(gameMap);
     floorTexture = map_load_floor_texture();
+    // Load background scenario texture
+    backgroundTexture = LoadTexture("assets/game_arts/scenario/scenario.png");
+    if (backgroundTexture.id == 0)
+    {
+        fprintf(stderr, "[WARNING] Could not load background texture. Using solid color.\n");
+    }
     if (floorTexture.id == 0)
     {
         fprintf(stderr, "[WARNING] Could not load floor texture. Menu will use solid background.\n");
