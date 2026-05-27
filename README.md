@@ -1,8 +1,8 @@
 ![Logotipo](/assets/game_arts/logo.png)
 
-## Vídeo de Funcionamento do Jogo
+## Vídeo de Funcionamento do Jogo (Clique na imagem para assistir)
 
-[![Assista no YouTube](https://img.youtube.com/vi/2-2m1r7L2Js/0.jpg)](https://www.youtube.com/watch?v=S2-2m1r7L2Js)
+[![Assista no YouTube](https://img.youtube.com/vi/2-2m1r7L2Js/0.jpg)](https://www.youtube.com/watch?v=2-2m1r7L2Js)
 
 ## Gerenciamento de Execução do Projeto
 
