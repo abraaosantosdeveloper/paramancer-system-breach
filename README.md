@@ -1,7 +1,8 @@
 ![Logotipo](/assets/game_arts/logo.png)
 
 ## Vídeo de Funcionamento do Jogo
-[![Demonstração Paramancer - Jogo em linguagem C](https://youtu.be/2-2m1r7L2Js)]
+
+[![Assista no YouTube](https://img.youtube.com/vi/2-2m1r7L2Js/0.jpg)](https://www.youtube.com/watch?v=S2-2m1r7L2Js)
 
 ## Gerenciamento de Execução do Projeto
 
