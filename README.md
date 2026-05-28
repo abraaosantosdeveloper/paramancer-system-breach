@@ -161,21 +161,26 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 - Participação ativa em todas as reuniões de equipe
 
 
-## Gerenciamento de Execução do Projeto
+# Gerenciamento de Execução do Projeto
 
 [Relatório Evolutivo do Gerenciamento do Projeto](https://docs.google.com/document/d/1tXrJkRwiRk7mcsrKFEbNX1feVAYsyZjU/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true) 
 
-#### Semana 1
+## Semana 1
 ![Descrição da imagem](/assets/dev_assets/backlog.png)
 
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
-### Semana 10
+## Semana 10
 ![Descrição da imagem](/assets/dev_assets/semana10-kanban1.png)
 ![Descrição da imagem](/assets/dev_assets/semana10-kanban2.png)
 ![Descrição da imagem](/assets/dev_assets/semana10-kanban3.png)
 ![Descrição da imagem](/assets/dev_assets/semana10-kanban4.png)
 ![Descrição da imagem](/assets/dev_assets/semana10-kanban5.png)
+
+## Bugs encontrados
+
+## Programação em pares
+[Relatório de programação em pares](https://docs.google.com/document/d/19ISpTjszp7_rk7M5Xx2i9qyp2TZjJhZi/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true)
 
 ### Em breve, mais conteúdo
 > Fique atento às atualizações futuras.
