@@ -171,16 +171,18 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
 ## Semana 10
-![Descrição da imagem](/assets/dev_assets/semana10-kanban1.png)
-![Descrição da imagem](/assets/dev_assets/semana10-kanban2.png)
-![Descrição da imagem](/assets/dev_assets/semana10-kanban3.png)
-![Descrição da imagem](/assets/dev_assets/semana10-kanban4.png)
-![Descrição da imagem](/assets/dev_assets/semana10-kanban5.png)
+![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban1.png)
+![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban2.png)
+![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban3.png)
+![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban4.png)
+![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban5.png)
 
 ## Bugs encontrados
+![Bug encontrado](/assets/dev_assets/bug-tracker.png)
 
 ## Programação em pares
 [Relatório de programação em pares](https://docs.google.com/document/d/19ISpTjszp7_rk7M5Xx2i9qyp2TZjJhZi/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true)
+![Desenvolvedores programando em par](/assets/dev_assets/programacao-par.jpg)
 
 ### Em breve, mais conteúdo
 > Fique atento às atualizações futuras.
