@@ -3,9 +3,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include "tipos.h"
 #include <string.h>
 #include <ctype.h>
-#include <raylib.h>
+#define SUPPORT_FILEFORMAT_JPEG
+#include "raylib.h"
 #ifdef _WIN32
 #include <conio.h>
 #endif
@@ -22,6 +24,10 @@
 // Global variables to keep last numeric guess and target for hint after question
 static int lastGuess = 0;
 static int lastTarget = 0;
+static bool firstMistake = true;
+static bool firstCorrect = true;
+static bool firstQuestionMistake = true;
+static bool firstQuestionCorrect = true;
 
 // Global resources (provided by main.c)
 extern Music bgm;
@@ -35,6 +41,61 @@ char gameMap[MAP_ALTURA][MAP_LARGURA] = {0};
 
 // Floor tile texture for procedural map rendering
 Texture2D floorTexture = {0};
+Texture2D backgroundTexture = {0};
+static Texture2D cidade = {0};
+
+// Actor textures (character portraits)
+static Texture2D texDex = {0};
+static Texture2D texZero = {0};
+static Texture2D texEntity = {0};
+static Texture2D texDexIdle = {0};
+static Texture2D texEntidadeSprite = {0};
+
+// Load all actor textures – called once before the first scene
+static void load_actor_textures(void)
+{
+    // Load Dex sprite and make black background transparent
+    texDex = LoadTexture("assets/game_arts/actors/dexface.png");
+    // Load Zero sprite (no background removal needed)
+    texZero = LoadTexture("assets/game_arts/actors/zeroface.png");
+
+    // Load Entidade sprite and make black background transparent
+    texEntity = LoadTexture("assets/game_arts/actors/entidade.png");
+
+    texDexIdle = LoadTexture("assets/game_arts/actors/dexteste.png");
+    texEntidadeSprite = LoadTexture("assets/game_arts/actors/entidade.png");
+    // Load city background (scenario)
+    cidade = LoadTexture("assets/game_arts/scenario/scenario.png");
+    if (cidade.id == 0)
+    {
+        fprintf(stderr, "[WARNING] Could not load city texture. Falling back to blue sky.\n");
+    }
+    // Use city as the main background texture; fallback will be blue sky if loading fails
+    backgroundTexture = cidade;
+}
+
+// Unload actor textures – called on graceful shutdown
+static void unload_actor_textures(void)
+{
+    if (texDex.id)    UnloadTexture(texDex);
+    if (texZero.id)   UnloadTexture(texZero);
+    if (texEntity.id) UnloadTexture(texEntity);
+    if (texDexIdle.id) UnloadTexture(texDexIdle);
+    if (texEntidadeSprite.id) UnloadTexture(texEntidadeSprite);
+    // Unload city background texture (backgroundTexture points to same resource)
+    if (cidade.id) UnloadTexture(cidade);
+}
+
+// Helper: return the correct texture for the speaker based on the dialog line
+static Texture2D get_speaker_texture(const char *msg)
+{
+    if (strstr(msg, "- Dex") != NULL)        return texDex;
+    if (strstr(msg, "- Zero") != NULL)       return texZero;
+    if (strstr(msg, "- The Entity") != NULL ||
+        strstr(msg, "- The entity") != NULL) return texEntity;
+    return (Texture2D){0}; // no portrait
+}
+
 
 // Text strings used in the game
 static const char *sistema[] = {
@@ -43,34 +104,74 @@ static const char *sistema[] = {
     "Vamos começar! Boa sorte!"};
 
 static const char *dialogo[] = {
-    "eu sou a entidade e bla bla bla -entidade",
-    "vamo jogar um jogo de acertar numero humano patetico e zas e zas -entidade",
-    "eu ajudo mano -zero"};
+    "Tem algo de errado... - Dex",
+    "Como assim? - Zero",
+    "Não percebe? Tudo parece... instável? Até parece que existem falhas na Matrix! - Dex",
+    "Agora que você falou... também tinha percebido algo estranho. Mas achei que era coisa da minha cabeça... - Zero",
+    "(Entidade aparece)",
+    "O que diabos é isso? - Dex",
+    "Pode me chamar de Entidade! - The Entity",
+    "O que é você? O que você quer? - Dex",
+    "Sou uma IA extremamente poderosa. Eu vim aqui para tomar os parâmetros do universo, para me fortalecer e dominar o mundo! - The entity",
+    "Q... Quê? - Dex",
+    "Dex! Você consegue enxergar? Tente tomar os parâmetros de volta para devolver a estabilidade ao universo! - Zero",
+    "Está bem, mas como vamos fazer isso? - Dex",
+    "Eu acho que encontrei uma forma de parar a Entidade. Preciso que você tente descobrir o parâmetro do sistema. - Zero",
+    "É um número inteiro, pelo que vejo. O problema é saber qual número, especificamente. - Zero",
+    "Qual o seu palpite? - Zero",
+    "O parâmetro é... - Dex",
+    "Excelente! Você acertou um dos parâmetros. Mas isso ainda não é tudo!",
+    "Vamos ao próximo... - Zero",
+    "Não está correto... mas encontrei um jeito de impedir que isso nos afete de alguma maneira. - Zero",
+    "Existe uma série de criptografias, mas para quebrá-las, precisamos descobrir palavras-chave com base em algumas pistas. - Zero",
+    "Aqui vai a primeira pista... - Zero",
+    "Dex, se concentra. Não deixe a entidade tirar sua atenção. Tenta novamente! - Zero ",
+    "Excelente! Mas isso ainda não é tudo. Precisamos tentar adivinhar o parâmetro novamente... - Zero ",
+    "O que está havendo?! C... Como você pode ter me vencido?! - The Entity",
+    "Parece que você não obteve êxito no seu plano... - Dex" ,
+    "25Conseguimos! Eu vou destruí-la de uma vez por todas, de dentro para fora. Já restaurei os parâmetros e agora vou desativar os servidores que alimentam esse monstro! - Zero", 
+    "Nãaaaaaoooo! Malditos! - The Entity", 
+    "Consegui desativar! - Zero", 
+    "Isso! Conseguimos! - Dex ",
+    "Parece que vocês não são tão espertos quanto pensam. Não conseguiram me parar, e nunca alcançarão este feito! - The entity ",
+    "Droga! - Dex" ,
+    "Não podemos fazer mais nada, a entidade conseguiu fechar as brechas de segurança que usei para invadir os servidores... - Zero ", 
+    "Eu não acredito! - Dex ", 
+    "Ninguém irá me impedir de dominar o universo. - The entity ", 
+    "Adeus! - The entity",
+};
 
 // Forward declarations for helper functions
 static void draw_gameplay_background(void);
 
 // Helper: draw centered text with background and keep music playing
-static void draw_centered(const char *text, Color col)
+static void draw_centered(const char *text)
 {
     // Keep music playing while rendering the centered message
     UpdateMusicStream(bgm);
-    // Draw solid background (sky blue)
-    ClearBackground((Color){200, 140, 80, 255});
+    // Draw full background (scenario) before text
+    draw_gameplay_background();
 
-    // Choose font size – make sistema[0] a bit smaller, sistema[1] a bit smaller by 2
+    // Choose base font size – adjust for specific sistema messages
     int fontSize = 20;
     if (strcmp(text, sistema[0]) == 0)
     {
-        fontSize = 14; // slightly smaller for the first message
+        fontSize = 18; // slightly smaller for the first message
     }
     else if (strcmp(text, sistema[1]) == 0)
     {
-        fontSize = 18; // two points smaller for the second message
+        fontSize = 23; // two points smaller for the second message
     }
-    // Detect if the text comes from dialogo array
+
+    if (strcmp(text, dialogo[25]) == 0)
+    {
+        fontSize = 25;
+    }
+
+    // Detect if the text comes from dialogo array (dynamic length)
     bool isDialog = false;
-    for (int i = 0; i < 3; ++i)
+    int dialogCount = sizeof(dialogo) / sizeof(dialogo[0]);
+    for (int i = 0; i < dialogCount; ++i)
     {
         if (strcmp(text, dialogo[i]) == 0)
         {
@@ -78,35 +179,75 @@ static void draw_centered(const char *text, Color col)
             break;
         }
     }
-    // Measure text width
-    int txtWidth = MeasureText(text, fontSize);
-    // Horizontal centering
-    int x = (GetScreenWidth() - txtWidth) / 2;
-    // Vertical positioning: top‑center for dialog, otherwise centre
-    int y = isDialog ? (int)(GetScreenHeight() * 0.2f) - fontSize / 2 : GetScreenHeight() / 2 - fontSize / 2;
+    // Reduce font size for dialog messages displayed via exibid_dial
 
-    // Define padding for the rectangle
+    // Adjust font size if text would overflow the screen
     const int padding = 8;
-    Rectangle border = {
-        (float)(x - padding),
-        (float)(y - padding),
-        (float)(txtWidth + 2 * padding),
-        (float)(fontSize + 2 * padding)};
+    const int spriteSpace = 64; // reserve space on the right for character sprite
+    int maxWidth = GetScreenWidth() - 2 * padding - spriteSpace - 20; // 20px margin
+    int txtWidth = MeasureText(text, fontSize);
+    if (txtWidth > maxWidth && txtWidth > 0)
+    {
+        // Scale font down proportionally to fit within maxWidth
+        fontSize = (int)(fontSize * (float)maxWidth / (float)txtWidth);
+        txtWidth = MeasureText(text, fontSize);
+    }
 
-    // Draw a black filled rectangle as background for the text
+
+
+
+// Determine if a speaker texture is available
+    Texture2D speakerTex = get_speaker_texture(text);
+    bool hasSpeaker = (speakerTex.id != 0);
+
+    // Base rectangle position assuming sprite space present
+    int baseRectX = (GetScreenWidth() - txtWidth - 2 * padding - spriteSpace) / 2;
+    int baseRectY = isDialog ? (int)(GetScreenHeight() * 0.2f) - fontSize / 2 : GetScreenHeight() / 2 - fontSize / 2;
+
+    // Content dimensions
+    int textBlockHeight = fontSize + 2 * padding;
+    int contentHeight = (textBlockHeight > spriteSpace) ? textBlockHeight : spriteSpace;
+
+    const int extra = 5; // extra margin
+
+    // Effective dimensions based on speaker presence
+    int effectiveSpriteSpace = hasSpeaker ? spriteSpace : 0;
+    int effectiveHeight = hasSpeaker ? contentHeight : textBlockHeight;
+    int effectiveWidth = txtWidth + 2 * padding + effectiveSpriteSpace;
+
+    int rectWidth = effectiveWidth + 2 * extra;
+    int rectHeight = effectiveHeight + 2 * extra;
+    int rectX = baseRectX - extra;
+    int rectY = baseRectY - padding - extra;
+
+    Rectangle border = {(float)rectX, (float)rectY, (float)rectWidth, (float)rectHeight};
     DrawRectangleRec(border, BLACK);
-    // Then draw a black border around it
-    DrawRectangleLinesEx(border, 2, WHITE);
+    DrawRectangleLinesEx(border, 4, WHITE);
 
-    // Draw the text – white for all messages (overrides any passed color)
-    DrawText(text, x, y, fontSize, WHITE);
+    // Text positioning
+    int textX;
+    if (hasSpeaker)
+        textX = rectX + extra + padding; // left side
+    else
+        textX = rectX + extra + (rectWidth - 2 * extra - txtWidth) / 2; // centered horizontally
+    int textY = rectY + extra + (effectiveHeight - fontSize) / 2; // vertically centered
+    DrawText(text, textX, textY, fontSize, WHITE);
+
+    // Draw speaker texture if present
+    if (hasSpeaker)
+    {
+        int targetH = effectiveHeight - 2 * padding;
+        float scale = (float)targetH / (float)speakerTex.height;
+        int texX = rectX + extra + padding + txtWidth + padding;
+        int texY = rectY + extra + (effectiveHeight - targetH) / 2;
+        DrawTextureEx(speakerTex, (Vector2){(float)texX, (float)texY}, 0.0f, scale, WHITE);
+    }
 }
 
 // Generic warning message box helper
 static void warning(const char *msg)
 {
-    double start = GetTime();
-    while (GetTime() - start < 4.0)
+    while (true)
     {
         if (WindowShouldClose())
             return;
@@ -117,11 +258,11 @@ static void warning(const char *msg)
         // Health HUD (same as other warnings)
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 20, 20, 20, WHITE);
+        DrawText(dexHealthStr, 26, 20, 20, WHITE);
         char entityHealthStr[32];
         sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 20);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
+        int eTextWidth = MeasureText(entityHealthStr, 26);
+        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
         // Warning box
         int msgFontSize = 20;
         int txtW = MeasureText(msg, msgFontSize);
@@ -132,17 +273,41 @@ static void warning(const char *msg)
         int boxY = (GetScreenHeight() - boxH) / 2;
         Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
-        DrawRectangleLinesEx(wbox, 2, WHITE);
+        DrawRectangleLinesEx(wbox, 4, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
         EndDrawing();
+        if (IsKeyPressed(KEY_ENTER))
+            break;
+    }
+}
+
+// Display dialog in a box similar to introducao
+static void exibid_dial(const char *msg)
+{
+    while (true)
+    {
+        if (WindowShouldClose())
+            return;
+        UpdateMusicStream(bgm);
+        BeginDrawing();
+        ClearBackground(GRAY);
+        draw_centered(msg);
+        EndDrawing();
+        if (IsKeyPressed(KEY_ENTER))
+            break;
     }
 }
 
 // Victory box displayed when Dex wins
 static void victoryBox(void)
 {
-    double start = GetTime();
-    while (GetTime() - start < 3.0)
+    exibid_dial(dialogo[23]); 
+    exibid_dial(dialogo[24]); 
+    exibid_dial(dialogo[25]); 
+    exibid_dial(dialogo[26]); 
+    exibid_dial(dialogo[27]); 
+    exibid_dial(dialogo[28]); 
+    while (true)
     {
         if (WindowShouldClose())
             return;
@@ -161,17 +326,24 @@ static void victoryBox(void)
         int boxY = (GetScreenHeight() - boxH) / 2;
         Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
-        DrawRectangleLinesEx(wbox, 2, WHITE);
+        DrawRectangleLinesEx(wbox, 4, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
         EndDrawing();
+        if (IsKeyPressed(KEY_ENTER))
+            break;
     }
 }
 
 // Defeat box displayed when Dex loses
 static void defeatBox(void)
 {
-    double start = GetTime();
-    while (GetTime() - start < 3.0)
+    exibid_dial(dialogo[29]);
+    exibid_dial(dialogo[30]);
+    exibid_dial(dialogo[31]);
+    exibid_dial(dialogo[32]);
+    exibid_dial(dialogo[33]);
+    exibid_dial(dialogo[34]);
+    while (true)
     {
         if (WindowShouldClose())
             return;
@@ -190,9 +362,11 @@ static void defeatBox(void)
         int boxY = (GetScreenHeight() - boxH) / 2;
         Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(wbox, BLACK);
-        DrawRectangleLinesEx(wbox, 2, WHITE);
+        DrawRectangleLinesEx(wbox, 4, WHITE);
         DrawText(msg, boxX + pad, boxY + pad, msgFontSize, WHITE);
         EndDrawing();
+        if (IsKeyPressed(KEY_ENTER))
+            break;
     }
 }
 
@@ -202,45 +376,96 @@ static void defeatBox(void)
 // Flow: 1) Draw sunset sky blue background 2) Render floor tiles from procedural map
 static void draw_gameplay_background(void)
 {
-    // Draw sky blue background
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){135, 206, 235, 255});
-
+    // Draw the background: prefer city texture, fallback to generic background, then sky
+    if (cidade.id != 0)
+    {
+        // Fill width to screen, keep height at 67% of original
+        float destWidth = (float)GetScreenWidth();
+        float destHeight = (float)cidade.height * 0.67f; // 67% of original height
+        // Use DrawTexturePro for non-uniform scaling
+        DrawTexturePro(cidade,
+            (Rectangle){0.0f, 0.0f, (float)cidade.width, (float)cidade.height},
+            (Rectangle){0.0f, 0.0f, destWidth, destHeight},
+            (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+    }
+    else if (backgroundTexture.id != 0)
+    {
+        DrawTexture(backgroundTexture, 0, 0, WHITE);
+    }
+    else
+    {
+        // Fallback: sky blue background
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){135, 206, 235, 255});
+    }
     // Render the floor tiles anchored to the bottom
     // floor.png is 64×128 pixels
     // Map is 20 tiles × 1 row (1280px width × 128px height)
     // Position at Y = 592 to place floor at bottom of 720px screen (720 - 128 = 592)
+    const float floorY = 592.0f;
     if (floorTexture.id != 0)
     {
-        map_render_platforms(gameMap, floorTexture, 0.0f, 592.0f);
+        map_render_platforms(gameMap, floorTexture, 0.0f, floorY);
+    }
+    // Render final scene sprites: Dex idle on left, Entidade on right
+    if (texDexIdle.id && texEntidadeSprite.id)
+    {
+        // Scale factors (both currently 10% of original size)
+        const float scaleDex = 0.1f;
+        const float scaleEnt = 0.1f;
+        // Scaled dimensions
+        float wDex = texDexIdle.width * scaleDex;
+        float wEnt = texEntidadeSprite.width * scaleEnt;
+        // Original gap between sprites when placed at extremes
+        float gapOrig = (float)GetScreenWidth() - wDex - wEnt;
+        // New gap is half the original
+        float gapNew = gapOrig / 2.0f;
+        // Center positions symmetrically around screen center
+        float centerX = (float)GetScreenWidth() / 2.0f;
+        float dexX = centerX - wDex - gapNew / 2.0f;
+        float entX = centerX + gapNew / 2.0f;
+        // Y positions: just above floor top, then move down 1 pixel
+        float dexY = (float)floorY - texDexIdle.height * scaleDex + 1.0f;
+        float entY = (float)floorY - texEntidadeSprite.height * scaleEnt + 1.0f;
+        // Draw sprites
+        DrawTextureEx(texDexIdle, (Vector2){dexX, dexY}, 0.0f, scaleDex, WHITE);
+        DrawTextureEx(texEntidadeSprite, (Vector2){entX, entY}, 0.0f, scaleEnt, WHITE);
     }
 }
 
 // Show a sequence of messages, advancing automatically after 3 seconds each
 static void introducao(void)
 {
-    // Sequence: first three sistema messages, then first three dialogo messages
-    const char *seq[] = {sistema[0], sistema[1], sistema[2], dialogo[0], dialogo[1], dialogo[2]};
-    const int total = 6;
-    const float displayTime = 4.0f; // seconds per message
-
-    for (int i = 0; i < total; ++i)
+    // Show system messages first – advance on ENTER key
+    for (int i = 0; i < 3; ++i)
     {
-        double start = GetTime(); // Raylib timer in seconds
         while (true)
         {
             if (WindowShouldClose())
-                return; // graceful exit
-
-            // Keep music playing while messages are displayed
+                return;
             UpdateMusicStream(bgm);
-
             BeginDrawing();
             ClearBackground(GRAY);
-            draw_centered(seq[i], DARKGRAY);
+            draw_centered(sistema[i]);
             EndDrawing();
+            // Advance when ENTER is pressed
+            if (IsKeyPressed(KEY_ENTER))
+                break;
+        }
+    }
 
-            // Exit loop after the desired display time has elapsed
-            if ((GetTime() - start) >= displayTime)
+    // Then show all dialogo messages – dynamic count, advance on ENTER key
+    for (int i = 0; i < 15; ++i)
+    {
+        while (true)
+        {
+            if (WindowShouldClose())
+                return;
+            UpdateMusicStream(bgm);
+            BeginDrawing();
+            ClearBackground(GRAY);
+            draw_centered(dialogo[i]);
+            EndDrawing();
+            if (IsKeyPressed(KEY_ENTER))
                 break;
         }
     }
@@ -249,15 +474,17 @@ static void introducao(void)
 // Simple gameplay: guess a number between 1 and 100
 static void perguntas(void);
 
+static Session current_session; // holds data for the current gameplay session
+
 static void gameplay(void)
 {
     // Initialize a session record for this round
-    Session sess = {0};
+    memset(&current_session, 0, sizeof(current_session));
     time_t now = time(NULL);
     struct tm *tm_info = localtime(&now);
-    strftime(sess.timestamp, sizeof(sess.timestamp), "%Y-%m-%d %H:%M:%S", tm_info);
+    strftime(current_session.timestamp, sizeof(current_session.timestamp), "%Y-%m-%d %H:%M:%S", tm_info);
     int target = sortearNumero(); // 1..100
-    sess.target = target;
+    current_session.target = target;
     lastTarget = target;   // store for hint after question
     char guessStr[4] = ""; // up to 3 digits
 
@@ -291,11 +518,11 @@ static void gameplay(void)
         // Health displays (always visible)
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 20, 20, 20, WHITE);
+        DrawText(dexHealthStr, 26, 20, 20, WHITE);
         char entityHealthStr[32];
         sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 20);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
+        int eTextWidth = MeasureText(entityHealthStr, 26);
+        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
 
         // Centered black rectangle with white text and black border
         const int rectWidth = 500;
@@ -304,7 +531,7 @@ static void gameplay(void)
         int rectY = (GetScreenHeight() - rectHeight) / 2;
         Rectangle rect = {(float)rectX, (float)rectY, (float)rectWidth, (float)rectHeight};
         DrawRectangleRec(rect, BLACK);
-        DrawRectangleLinesEx(rect, 2, BLACK);
+        DrawRectangleLinesEx(rect, 4, WHITE);
         const char *prompt = "Digite um número (1-100) e pressione ENTER:";
         int promptFontSize = 20;
         DrawText(prompt, rectX + 20, rectY + 20, promptFontSize, WHITE);
@@ -329,10 +556,26 @@ static void gameplay(void)
         else if (IsKeyPressed(KEY_ENTER) && strlen(guessStr) > 0)
         {
             int guess = atoi(guessStr);
+            // Record the guess
+            if (current_session.attempts_count < MAX_GUESSES) {
+                current_session.guesses[current_session.attempts_count] = guess;
+            }
+            current_session.attempts_count++;
+            // Track high/low bias
+            if (guess > target) {
+                current_session.high_count++;
+            } else if (guess < target) {
+                current_session.low_count++;
+            }
             lastGuess = guess;
             if (guess == target)
             {
                 // Correct guess: damage entity
+                if (firstCorrect) {
+                    exibid_dial(dialogo[16]); // "Excelente! Você acertou um dos parâmetros. Mas isso ainda não é tudo!"
+                    exibid_dial(dialogo[17]); // "Vamos ao próximo… - Zero"
+                    firstCorrect = false;
+                }
                 entity.health -= 100;
                 warning("a entidade tomou dano!!");
                 // Reset for a new round
@@ -345,21 +588,14 @@ static void gameplay(void)
             else
             {
                 // Incorrect guess: show background and health for 4 seconds, then ask question
-                double msgStart = GetTime();
-                while (GetTime() - msgStart < 4.0)
-                {
-                    if (WindowShouldClose())
-                        return;
-                    UpdateMusicStream(bgm);
-                    BeginDrawing();
-                    // Draw gameplay background with procedurally generated platforms
-                    draw_gameplay_background();
-                    // Redraw health HUD
-                    DrawText(dexHealthStr, 20, 20, 20, WHITE);
-                    DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
-                    EndDrawing();
+                if (firstMistake) {
+                    // Show special dialog sequence on first mistake
+                    exibid_dial(dialogo[18]);
+                    exibid_dial(dialogo[19]);
+                    exibid_dial(dialogo[20]);
+                    firstMistake = false;
                 }
-                // Show warning message before question
+                // Show warning message before question immediately
                 warning("você terá uma chance de evitar o dano, acerte essa pergunta!");
                 // Call perguntas after warning
                 perguntas();
@@ -413,18 +649,18 @@ static void perguntas(void)
         // Health HUD
         char dexHealthStr[32];
         sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 20, 20, 20, WHITE);
+        DrawText(dexHealthStr, 26, 20, 20, WHITE);
         char entityHealthStr[32];
         sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 20);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
+        int eTextWidth = MeasureText(entityHealthStr, 26);
+        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
         // Central black box
-        const int boxW = 600, boxH = 200;
+        const int boxW = 600, boxH = 250;
         int boxX = (GetScreenWidth() - boxW) / 2;
         int boxY = (GetScreenHeight() - boxH) / 2;
         Rectangle box = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
         DrawRectangleRec(box, BLACK);
-        DrawRectangleLinesEx(box, 2, BLACK);
+        DrawRectangleLinesEx(box, 4, WHITE);
         // Render question and options
         int fontSize = 20;
         int lineY = boxY + 20;
@@ -493,8 +729,13 @@ static void perguntas(void)
             correctText = "";
             break;
         }
-        double warnStart = GetTime();
-        while (GetTime() - warnStart < 4.0)
+
+        if (firstQuestionMistake) {
+            exibid_dial(dialogo[21]);
+            firstQuestionMistake = false;
+        }
+
+        while (true)
         {
             if (WindowShouldClose())
                 return;
@@ -504,11 +745,11 @@ static void perguntas(void)
             draw_gameplay_background();
             char dexHealthStr[32];
             sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-            DrawText(dexHealthStr, 20, 20, 20, WHITE);
+            DrawText(dexHealthStr, 26, 20, 20, WHITE);
             char entityHealthStr[32];
             sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-            int eTextWidth = MeasureText(entityHealthStr, 20);
-            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
+            int eTextWidth = MeasureText(entityHealthStr, 26);
+            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
             const char *msg1 = "dex recebeu 20 de dano!";
             char msg2[128];
             sprintf(msg2, "a resposta da pergunta era (%c) %s", toupper(correctLower), correctText);
@@ -523,17 +764,23 @@ static void perguntas(void)
             int boxY = (GetScreenHeight() - boxH) / 2;
             Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
             DrawRectangleRec(wbox, BLACK);
-            DrawRectangleLinesEx(wbox, 2, WHITE);
+            DrawRectangleLinesEx(wbox, 4, WHITE);
             DrawText(msg1, boxX + pad, boxY + pad, msgFontSize, WHITE);
             DrawText(msg2, boxX + pad, boxY + pad + msgFontSize + pad, msgFontSize, WHITE);
             EndDrawing();
+            if (IsKeyPressed(KEY_ENTER))
+                break;
         }
     }
     else
     {
         // Correct answer – show success box with hint about previous numeric guess
-        double winStart = GetTime();
-        while (GetTime() - winStart < 4.0)
+        
+        if (firstQuestionCorrect) {
+            exibid_dial(dialogo[22]);
+            firstQuestionCorrect = false;
+        }
+        while (true)
         {
             if (WindowShouldClose())
                 return;
@@ -543,11 +790,11 @@ static void perguntas(void)
             draw_gameplay_background();
             char dexHealthStr[32];
             sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-            DrawText(dexHealthStr, 20, 20, 20, WHITE);
+            DrawText(dexHealthStr, 26, 20, 20, WHITE);
             char entityHealthStr[32];
             sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-            int eTextWidth = MeasureText(entityHealthStr, 20);
-            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 20, 20, WHITE);
+            int eTextWidth = MeasureText(entityHealthStr, 26);
+            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
             const char *msg1 = "Você acertou a pergunta!";
             char hint[128];
             if (lastGuess < lastTarget)
@@ -573,10 +820,12 @@ static void perguntas(void)
             int boxY = (GetScreenHeight() - boxH) / 2;
             Rectangle wbox = {(float)boxX, (float)boxY, (float)boxW, (float)boxH};
             DrawRectangleRec(wbox, BLACK);
-            DrawRectangleLinesEx(wbox, 2, WHITE);
+            DrawRectangleLinesEx(wbox, 4, WHITE);
             DrawText(msg1, boxX + pad, boxY + pad, msgFontSize, WHITE);
             DrawText(hint, boxX + pad, boxY + pad + msgFontSize + pad, msgFontSize, WHITE);
             EndDrawing();
+            if (IsKeyPressed(KEY_ENTER))
+                break;
         }
     }
 }
@@ -584,10 +833,17 @@ static void perguntas(void)
 // Public API – runs the full flow (intro then gameplay)
 Session executar_partida()
 {
+    // Load character portraits
+    load_actor_textures();
+
     // Ensure music is playing from the start
     PlayMusicStream(bgm);
     // Main loop – just keep drawing background while intro or gameplay runs
     introducao();
     gameplay();
-    return (Session){0}; // Placeholder return value; fill with actual session data as needed
+
+    // Unload character portraits before exiting
+    unload_actor_textures();
+    // Return the populated session data
+    return current_session;
 }

@@ -10,9 +10,10 @@
 // Global instances defined in jogo.c
 extern Entity entity;
 extern Dex dex;
-extern Music bgm;
+extern Music bgm; // Music defined in raylib.h, ensure <raylib.h> is included
 extern char gameMap[MAP_ALTURA][MAP_LARGURA];
 extern Texture2D floorTexture;
+extern Texture2D backgroundTexture;
 
 // API do loop principal do jogo em modo console.
 
