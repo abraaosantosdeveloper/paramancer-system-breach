@@ -96,9 +96,11 @@ Eu, como jogador, quero ter acesso aos meus dados de média, melhor/pior sessão
 
 ### Reiniciar ou Sair da Partida
 Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, ou sair da partida em qualquer momento.
+
 ---
 
-## Equipe e Contribuições
+# Equipe e Contribuições
+
 |Nome|Perfil do Github|
 |---|---|
 |Abraão Filipi dos Santos -- DEV |[@abraaosantosdeveloper](https://github.com/abraaosantosdeveloper/)||
