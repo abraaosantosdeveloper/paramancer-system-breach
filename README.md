@@ -113,11 +113,19 @@ O jogo utiliza a linguagem de programação C, por ocasião da disciplina de **P
 ##### Bibliotecas externas
 O programa utiliza a biblioteca externa **Raylib** para criação da interface.
 
-## Product Backlog - Jira's Board
+## Administração da execução do projeto - quadros Kanban
 
+### Semana 1
 ![Descrição da imagem](/assets/dev_assets/backlog.png)
 
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
+
+## Semana 10
+![Descrição da imagem](/assets/dev_assets/semana10-kanban1.png)
+![Descrição da imagem](/assets/dev_assets/semana10-kanban2.png)
+![Descrição da imagem](/assets/dev_assets/semana10-kanban3.png)
+![Descrição da imagem](/assets/dev_assets/semana10-kanban4.png)
+![Descrição da imagem](/assets/dev_assets/semana10-kanban5.png)
 
 ## Protótipo de Telas
 [Clique e veja o Protótipo de Telas](https://www.figma.com/board/l18BrfQ96FAK6J05IgYIHJ/Paramancer?t=xTz0ci4WMo4mZTHC-6)
