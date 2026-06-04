@@ -172,15 +172,8 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
-## Semana 10
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban1.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban2.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban3.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban4.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban5.png)
-
 ## Semana 11
-![Quadro kanban de atividades](/assets/dev_assets/kanban.png)
+![Quadro kanban de atividades](/assets/dev_assets/Kanban.png)
 
 
 ## Bugs encontrados
