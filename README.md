@@ -165,6 +165,8 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 
 [Relatório Evolutivo do Gerenciamento do Projeto](https://docs.google.com/document/d/1tXrJkRwiRk7mcsrKFEbNX1feVAYsyZjU/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true) 
 
+[Quadro Kanban do Projeto](https://linear.app/paramancer/team/PAR/projects/all) 
+
 ## Semana 1
 ![Descrição da imagem](/assets/dev_assets/backlog.png)
 
@@ -176,6 +178,10 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 ![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban3.png)
 ![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban4.png)
 ![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban5.png)
+
+## Semana 11
+![Quadro kanban de atividades](/assets/dev_assets/kanban.png)
+
 
 ## Bugs encontrados
 ![Bug encontrado](/assets/dev_assets/bug-tracker.png)
