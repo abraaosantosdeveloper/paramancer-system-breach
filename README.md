@@ -183,7 +183,7 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 ![Bug encontrado](/assets/dev_assets/bug-3.png)
 
 ## Programação em pares
-[Relatório de programação em pares](https://docs.google.com/document/d/19ISpTjszp7_rk7M5Xx2i9qyp2TZjJhZi/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true)
+[Relatório de programação em pares](https://docs.google.com/document/d/1cGPPoYksjWoFUmMVgNJxq5wSW75drjS0dL9561KAz1w/edit?tab=t.0)
 ![Desenvolvedores programando em par](/assets/dev_assets/programacao-par.jpg)
 
 ### Em breve, mais conteúdo
