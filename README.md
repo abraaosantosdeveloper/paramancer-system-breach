@@ -21,24 +21,6 @@ A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acer
 ## Antagonista: The Entity
 ![Personagem](/assets/game_arts/actors/the_entity.png)
 
-### Mecânicas adjacentes
-> Isto é apenas um conceito; as imagens serão melhoradas.
-
-### Buffers
-**Buffer de Hp extra**
-![Buffer](/assets/game_arts/buffers/exta_hp.png)
-Ao receber, o usuário ganhará uma determinada quantidade de corações extras.
-
-**Buffer de Dano crítico**
-![Buffer](/assets/game_arts/buffers/critical.png)
-Com este buffer, o usuário dará o dobro de dano ao inimigo.
-
-
-**Buffer de Imunidade**
-![Buffer](/assets/game_arts/buffers/immunity.png)
-Com este buffer, ao errar uma pergunta caso o personagem não acerte o número (parâmetro) a ser advinhado, ele não perderá vida.
-
-
 # Informações técnicas
 
 #### Linguagem de programação utilizada
