@@ -6,12 +6,6 @@
 
 # Sobre o Jogo
 ---
-## Protagonista: Dex
-![Personagem](/assets/game_arts/actors/dex_idle.png)
-## Antagonista: The Entity
-![Personagem](/assets/game_arts/actors/the_entity.png)
-
-
 ### História
 Dex é um jovem que ama matemática e estatística, e ele tem um dom extraordinário: enxergar padrões matemáticos em tudo. Dex começa a perceber
 falhas no seu mundo: como se a “matrix” estivesse corrompida. Ele descobre que há uma Entidade corruptora, uma IA que rouba parâmetros do universo e, por
@@ -20,6 +14,12 @@ estabilidade do seu universo.
 
 ## Fluxo do jogo
 A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acertá-lo para ganhar o jogo. Caso nao obtenha sucesso, ele recebe uma pergunta com opçoes de respostas. Se acertar a pergunta, o jogador causa dano ao oponente e recebe uma dica em relaçao ao número gerado pelo sistema que ele está buscando acertar. Caso ele erre a pergunta feita, o personagem protagonista recebe dano, e o jogador ganha mais uma chance de acertar o número alvo, mas sem receber dicas sobre ele.
+
+## Protagonista: Dex
+![Personagem](/assets/game_arts/actors/dex_idle.png)
+
+## Antagonista: The Entity
+![Personagem](/assets/game_arts/actors/the_entity.png)
 
 ### Mecânicas adjacentes
 > Isto é apenas um conceito; as imagens serão melhoradas.
