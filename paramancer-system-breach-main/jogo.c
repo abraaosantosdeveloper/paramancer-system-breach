@@ -42,7 +42,24 @@ char gameMap[MAP_ALTURA][MAP_LARGURA] = {0};
 // Floor tile texture for procedural map rendering
 Texture2D floorTexture = {0};
 Texture2D backgroundTexture = {0};
-static Texture2D cidade = {0};
+
+// Background layers
+static Texture2D skyTexture = {0};
+static Texture2D layer1Texture = {0};
+static Texture2D layer2Texture = {0};
+static bool bgOffsetsReady = false;
+static float bgOffsets[3] = {0};
+static bool entityVisible = false;
+static bool entitySlideActive = false;
+static float entitySlideX = 0.0f;
+static bool dexBlinkActive = false;
+static bool dexBlinkVisible = true;
+static float dexBlinkTimer = 0.0f;
+static int dexBlinkTogglesRemaining = 0;
+static bool entityBlinkActive = false;
+static bool entityBlinkVisible = true;
+static float entityBlinkTimer = 0.0f;
+static int entityBlinkTogglesRemaining = 0;
 
 // Actor textures (character portraits)
 static Texture2D texDex = {0};
@@ -50,6 +67,11 @@ static Texture2D texZero = {0};
 static Texture2D texEntity = {0};
 static Texture2D texDexIdle = {0};
 static Texture2D texEntidadeSprite = {0};
+static Texture2D heartFullRed = {0};
+static Texture2D heartHalfRed = {0};
+static Texture2D heartFullBlue = {0};
+static Texture2D heartHalfBlue = {0};
+static Texture2D heartEmpty = {0};
 
 // Load all actor textures – called once before the first scene
 static void load_actor_textures(void)
@@ -62,40 +84,153 @@ static void load_actor_textures(void)
     // Load Entidade sprite and make black background transparent
     texEntity = LoadTexture("assets/game_arts/actors/entidade.png");
 
-    texDexIdle = LoadTexture("assets/game_arts/actors/dexteste.png");
-    texEntidadeSprite = LoadTexture("assets/game_arts/actors/entidade.png");
-    // Load city background (scenario)
-    cidade = LoadTexture("assets/game_arts/scenario/scenario.png");
-    if (cidade.id == 0)
+    texDexIdle = LoadTexture("assets/game_arts/actors/dex_idle.png");
+    texEntidadeSprite = LoadTexture("assets/game_arts/actors/the_entity.png");
+    heartFullRed = LoadTexture("assets/game_arts/actors/full_heart.png");
+    heartHalfRed = LoadTexture("assets/game_arts/actors/half_heart.png");
+    heartFullBlue = LoadTexture("assets/game_arts/actors/full_heart_blue.png");
+    heartHalfBlue = LoadTexture("assets/game_arts/actors/half_heart_blue.png");
+    heartEmpty = LoadTexture("assets/game_arts/actors/empty_heart.png");
+
+    // Load background layers
+    skyTexture = LoadTexture("assets/game_arts/scenario/City background sky.png");
+    layer1Texture = LoadTexture("assets/game_arts/scenario/City background layer1.png");
+    layer2Texture = LoadTexture("assets/game_arts/scenario/City background layer2.png");
+
+    if (skyTexture.id == 0 || layer1Texture.id == 0 || layer2Texture.id == 0)
     {
-        fprintf(stderr, "[WARNING] Could not load city texture. Falling back to blue sky.\n");
+        fprintf(stderr, "[WARNING] Could not load one or more background layers.\n");
     }
-    // Use city as the main background texture; fallback will be blue sky if loading fails
-    backgroundTexture = cidade;
+    entityVisible = false;
+    entitySlideActive = false;
+    entitySlideX = 0.0f;
+    dexBlinkActive = false;
+    dexBlinkVisible = true;
+    dexBlinkTimer = 0.0f;
+    dexBlinkTogglesRemaining = 0;
+    entityBlinkActive = false;
+    entityBlinkVisible = true;
+    entityBlinkTimer = 0.0f;
+    entityBlinkTogglesRemaining = 0;
 }
 
 // Unload actor textures – called on graceful shutdown
 static void unload_actor_textures(void)
 {
-    if (texDex.id)    UnloadTexture(texDex);
-    if (texZero.id)   UnloadTexture(texZero);
-    if (texEntity.id) UnloadTexture(texEntity);
-    if (texDexIdle.id) UnloadTexture(texDexIdle);
-    if (texEntidadeSprite.id) UnloadTexture(texEntidadeSprite);
-    // Unload city background texture (backgroundTexture points to same resource)
-    if (cidade.id) UnloadTexture(cidade);
+    if (texDex.id)
+        UnloadTexture(texDex);
+    if (texZero.id)
+        UnloadTexture(texZero);
+    if (texEntity.id)
+        UnloadTexture(texEntity);
+    if (texDexIdle.id)
+        UnloadTexture(texDexIdle);
+    if (texEntidadeSprite.id)
+        UnloadTexture(texEntidadeSprite);
+    if (heartFullRed.id)
+        UnloadTexture(heartFullRed);
+    if (heartHalfRed.id)
+        UnloadTexture(heartHalfRed);
+    if (heartFullBlue.id)
+        UnloadTexture(heartFullBlue);
+    if (heartHalfBlue.id)
+        UnloadTexture(heartHalfBlue);
+    if (heartEmpty.id)
+        UnloadTexture(heartEmpty);
+
+    if (skyTexture.id)
+        UnloadTexture(skyTexture);
+    if (layer1Texture.id)
+        UnloadTexture(layer1Texture);
+    if (layer2Texture.id)
+        UnloadTexture(layer2Texture);
 }
 
 // Helper: return the correct texture for the speaker based on the dialog line
 static Texture2D get_speaker_texture(const char *msg)
 {
-    if (strstr(msg, "- Dex") != NULL)        return texDex;
-    if (strstr(msg, "- Zero") != NULL)       return texZero;
+    if (strstr(msg, "- Dex") != NULL)
+        return texDex;
+    if (strstr(msg, "- Zero") != NULL)
+        return texZero;
     if (strstr(msg, "- The Entity") != NULL ||
-        strstr(msg, "- The entity") != NULL) return texEntity;
+        strstr(msg, "- The entity") != NULL)
+        return texEntity;
     return (Texture2D){0}; // no portrait
 }
 
+static void draw_hearts_row(int startX, int startY, bool isDex, int health, int maxHealth)
+{
+    const int heartCount = 10;
+    int clamped = health;
+    if (clamped < 0)
+        clamped = 0;
+    if (clamped > maxHealth)
+        clamped = maxHealth;
+
+    int missingHalfUnits = (maxHealth - clamped) / 5;
+    if (missingHalfUnits < 0)
+        missingHalfUnits = 0;
+    if (missingHalfUnits > heartCount * 2)
+        missingHalfUnits = heartCount * 2;
+
+    int emptyCount = missingHalfUnits / 2;
+    int hasHalf = (missingHalfUnits % 2);
+
+    Texture2D fullTex = isDex ? heartFullRed : heartFullBlue;
+    Texture2D halfTex = isDex ? heartHalfRed : heartHalfBlue;
+    Texture2D emptyTex = heartEmpty;
+
+    const float HEART_SCALE = 0.1f;
+    int heartW = (int)(fullTex.width * HEART_SCALE);
+    int heartH = (int)(fullTex.height * HEART_SCALE);
+    int spacing = 4;
+
+    for (int i = 0; i < heartCount; ++i)
+    {
+        int drawX = startX + i * (heartW + spacing);
+        int drawY = startY;
+        Texture2D toDraw = fullTex;
+
+        if (isDex)
+        {
+            int emptyStart = heartCount - emptyCount;
+            if (i >= emptyStart)
+            {
+                toDraw = emptyTex;
+            }
+            else if (hasHalf && i == emptyStart - 1)
+            {
+                toDraw = halfTex;
+            }
+        }
+        else
+        {
+            if (i < emptyCount)
+            {
+                toDraw = emptyTex;
+            }
+            else if (hasHalf && i == emptyCount)
+            {
+                toDraw = halfTex;
+            }
+        }
+
+        DrawTextureEx(toDraw, (Vector2){(float)drawX, (float)drawY}, 0.0f, HEART_SCALE, WHITE);
+    }
+}
+
+static void draw_health_hud(void)
+{
+    const int maxHealth = 100;
+    const float HEART_SCALE = 0.1f;
+    int heartW = (int)(heartFullRed.width * HEART_SCALE);
+    int spacing = 4;
+    int totalW = heartW * 10 + spacing * 9;
+
+    draw_hearts_row(20, 16, true, dex.health, maxHealth);
+    draw_hearts_row(GetScreenWidth() - totalW - 20, 16, false, entity.health, maxHealth);
+}
 
 // Text strings used in the game
 static const char *sistema[] = {
@@ -128,16 +263,16 @@ static const char *dialogo[] = {
     "Dex, se concentra. Não deixe a entidade tirar sua atenção. Tenta novamente! - Zero ",
     "Excelente! Mas isso ainda não é tudo. Precisamos tentar adivinhar o parâmetro novamente... - Zero ",
     "O que está havendo?! C... Como você pode ter me vencido?! - The Entity",
-    "Parece que você não obteve êxito no seu plano... - Dex" ,
-    "25Conseguimos! Eu vou destruí-la de uma vez por todas, de dentro para fora. Já restaurei os parâmetros e agora vou desativar os servidores que alimentam esse monstro! - Zero", 
-    "Nãaaaaaoooo! Malditos! - The Entity", 
-    "Consegui desativar! - Zero", 
+    "Parece que você não obteve êxito no seu plano... - Dex",
+    "Conseguimos! Eu vou destruí-la de uma vez por todas, de dentro para fora. Já restaurei os parâmetros e agora vou desativar os servidores que alimentam esse monstro! - Zero",
+    "Nãaaaaaoooo! Malditos! - The Entity",
+    "Consegui desativar! - Zero",
     "Isso! Conseguimos! - Dex ",
     "Parece que vocês não são tão espertos quanto pensam. Não conseguiram me parar, e nunca alcançarão este feito! - The entity ",
-    "Droga! - Dex" ,
-    "Não podemos fazer mais nada, a entidade conseguiu fechar as brechas de segurança que usei para invadir os servidores... - Zero ", 
-    "Eu não acredito! - Dex ", 
-    "Ninguém irá me impedir de dominar o universo. - The entity ", 
+    "Droga! - Dex",
+    "Não podemos fazer mais nada, a entidade conseguiu fechar as brechas de segurança que usei para invadir os servidores... - Zero ",
+    "Eu não acredito! - Dex ",
+    "Ninguém irá me impedir de dominar o universo. - The entity ",
     "Adeus! - The entity",
 };
 
@@ -183,7 +318,7 @@ static void draw_centered(const char *text)
 
     // Adjust font size if text would overflow the screen
     const int padding = 8;
-    const int spriteSpace = 64; // reserve space on the right for character sprite
+    const int spriteSpace = 64;                                       // reserve space on the right for character sprite
     int maxWidth = GetScreenWidth() - 2 * padding - spriteSpace - 20; // 20px margin
     int txtWidth = MeasureText(text, fontSize);
     if (txtWidth > maxWidth && txtWidth > 0)
@@ -193,12 +328,16 @@ static void draw_centered(const char *text)
         txtWidth = MeasureText(text, fontSize);
     }
 
-
-
-
-// Determine if a speaker texture is available
+    // Determine if a speaker texture is available
     Texture2D speakerTex = get_speaker_texture(text);
     bool hasSpeaker = (speakerTex.id != 0);
+
+    if (!entityVisible && strcmp(text, dialogo[4]) == 0)
+    {
+        entityVisible = true;
+        entitySlideActive = true;
+        entitySlideX = (float)GetScreenWidth() + 40.0f;
+    }
 
     // Base rectangle position assuming sprite space present
     int baseRectX = (GetScreenWidth() - txtWidth - 2 * padding - spriteSpace) / 2;
@@ -230,7 +369,7 @@ static void draw_centered(const char *text)
         textX = rectX + extra + padding; // left side
     else
         textX = rectX + extra + (rectWidth - 2 * extra - txtWidth) / 2; // centered horizontally
-    int textY = rectY + extra + (effectiveHeight - fontSize) / 2; // vertically centered
+    int textY = rectY + extra + (effectiveHeight - fontSize) / 2;       // vertically centered
     DrawText(text, textX, textY, fontSize, WHITE);
 
     // Draw speaker texture if present
@@ -255,14 +394,7 @@ static void warning(const char *msg)
         BeginDrawing();
         // Background with procedurally generated platforms
         draw_gameplay_background();
-        // Health HUD (same as other warnings)
-        char dexHealthStr[32];
-        sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 26, 20, 20, WHITE);
-        char entityHealthStr[32];
-        sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 26);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
+        draw_health_hud();
         // Warning box
         int msgFontSize = 20;
         int txtW = MeasureText(msg, msgFontSize);
@@ -301,12 +433,12 @@ static void exibid_dial(const char *msg)
 // Victory box displayed when Dex wins
 static void victoryBox(void)
 {
-    exibid_dial(dialogo[23]); 
-    exibid_dial(dialogo[24]); 
-    exibid_dial(dialogo[25]); 
-    exibid_dial(dialogo[26]); 
-    exibid_dial(dialogo[27]); 
-    exibid_dial(dialogo[28]); 
+    exibid_dial(dialogo[23]);
+    exibid_dial(dialogo[24]);
+    exibid_dial(dialogo[25]);
+    exibid_dial(dialogo[26]);
+    exibid_dial(dialogo[27]);
+    exibid_dial(dialogo[28]);
     while (true)
     {
         if (WindowShouldClose())
@@ -332,6 +464,27 @@ static void victoryBox(void)
         if (IsKeyPressed(KEY_ENTER))
             break;
     }
+}
+
+static void play_entity_defeat_sequence(void)
+{
+    entityBlinkActive = true;
+    entityBlinkVisible = true;
+    entityBlinkTimer = 0.0f;
+    entityBlinkTogglesRemaining = 6;
+
+    while (entityBlinkActive)
+    {
+        if (WindowShouldClose())
+            return;
+        UpdateMusicStream(bgm);
+        BeginDrawing();
+        draw_gameplay_background();
+        draw_health_hud();
+        EndDrawing();
+    }
+
+    entityVisible = false;
 }
 
 // Defeat box displayed when Dex loses
@@ -376,26 +529,61 @@ static void defeatBox(void)
 // Flow: 1) Draw sunset sky blue background 2) Render floor tiles from procedural map
 static void draw_gameplay_background(void)
 {
-    // Draw the background: prefer city texture, fallback to generic background, then sky
-    if (cidade.id != 0)
+    const int screenW = GetScreenWidth();
+    const int screenH = GetScreenHeight();
+    float dt = GetFrameTime();
+
+    // Fallback: sky blue background
+    DrawRectangle(0, 0, screenW, screenH, (Color){135, 206, 235, 255});
+
+    // Draw background layers with minimal scaling and subtle parallax
+    Texture2D layers[3] = {skyTexture, layer2Texture, layer1Texture};
+    if (!bgOffsetsReady)
     {
-        // Fill width to screen, keep height at 67% of original
-        float destWidth = (float)GetScreenWidth();
-        float destHeight = (float)cidade.height * 0.67f; // 67% of original height
-        // Use DrawTexturePro for non-uniform scaling
-        DrawTexturePro(cidade,
-            (Rectangle){0.0f, 0.0f, (float)cidade.width, (float)cidade.height},
-            (Rectangle){0.0f, 0.0f, destWidth, destHeight},
-            (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        for (int i = 0; i < 3; ++i)
+        {
+            if (layers[i].id == 0)
+            {
+                bgOffsets[i] = 0.0f;
+                continue;
+            }
+
+            float scale = 1.0f;
+            if (layers[i].width < screenW || layers[i].height < screenH)
+            {
+                float scaleW = (float)screenW / (float)layers[i].width;
+                float scaleH = (float)screenH / (float)layers[i].height;
+                scale = (scaleW > scaleH) ? scaleW : scaleH;
+            }
+
+            float destW = layers[i].width * scale;
+            float maxShift = (destW > screenW) ? (destW - (float)screenW) : 0.0f;
+            bgOffsets[i] = (maxShift > 0.0f) ? (float)GetRandomValue(0, (int)maxShift) : 0.0f;
+        }
+        bgOffsetsReady = true;
     }
-    else if (backgroundTexture.id != 0)
+
+    for (int i = 0; i < 3; ++i)
     {
-        DrawTexture(backgroundTexture, 0, 0, WHITE);
-    }
-    else
-    {
-        // Fallback: sky blue background
-        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){135, 206, 235, 255});
+        if (layers[i].id == 0)
+            continue;
+
+        float scale = 1.0f;
+        if (layers[i].width < screenW || layers[i].height < screenH)
+        {
+            float scaleW = (float)screenW / (float)layers[i].width;
+            float scaleH = (float)screenH / (float)layers[i].height;
+            scale = (scaleW > scaleH) ? scaleW : scaleH;
+        }
+
+        float destW = layers[i].width * scale;
+        float destH = layers[i].height * scale;
+        float offsetX = (destW > screenW) ? -bgOffsets[i] : 0.0f;
+
+        DrawTexturePro(layers[i],
+                       (Rectangle){0.0f, 0.0f, (float)layers[i].width, (float)layers[i].height},
+                       (Rectangle){offsetX, 0.0f, destW, destH},
+                       (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
     }
     // Render the floor tiles anchored to the bottom
     // floor.png is 64×128 pixels
@@ -407,28 +595,71 @@ static void draw_gameplay_background(void)
         map_render_platforms(gameMap, floorTexture, 0.0f, floorY);
     }
     // Render final scene sprites: Dex idle on left, Entidade on right
-    if (texDexIdle.id && texEntidadeSprite.id)
+    if (texDexIdle.id)
     {
-        // Scale factors (both currently 10% of original size)
-        const float scaleDex = 0.1f;
-        const float scaleEnt = 0.1f;
-        // Scaled dimensions
+        const float scaleDex = 0.09f;
+        const float scaleEnt = 0.22f;
         float wDex = texDexIdle.width * scaleDex;
-        float wEnt = texEntidadeSprite.width * scaleEnt;
-        // Original gap between sprites when placed at extremes
-        float gapOrig = (float)GetScreenWidth() - wDex - wEnt;
-        // New gap is half the original
-        float gapNew = gapOrig / 2.0f;
-        // Center positions symmetrically around screen center
-        float centerX = (float)GetScreenWidth() / 2.0f;
-        float dexX = centerX - wDex - gapNew / 2.0f;
-        float entX = centerX + gapNew / 2.0f;
-        // Y positions: just above floor top, then move down 1 pixel
         float dexY = (float)floorY - texDexIdle.height * scaleDex + 1.0f;
-        float entY = (float)floorY - texEntidadeSprite.height * scaleEnt + 1.0f;
-        // Draw sprites
-        DrawTextureEx(texDexIdle, (Vector2){dexX, dexY}, 0.0f, scaleDex, WHITE);
-        DrawTextureEx(texEntidadeSprite, (Vector2){entX, entY}, 0.0f, scaleEnt, WHITE);
+        float dexX = (float)GetScreenWidth() * 0.25f - wDex * 0.5f;
+        if (dexBlinkActive)
+        {
+            dexBlinkTimer += dt;
+            if (dexBlinkTimer >= 0.12f)
+            {
+                dexBlinkTimer -= 0.12f;
+                dexBlinkVisible = !dexBlinkVisible;
+                dexBlinkTogglesRemaining--;
+                if (dexBlinkTogglesRemaining <= 0)
+                {
+                    dexBlinkActive = false;
+                    dexBlinkVisible = true;
+                }
+            }
+        }
+
+        if (!dexBlinkActive || dexBlinkVisible)
+        {
+            DrawTextureEx(texDexIdle, (Vector2){dexX, dexY}, 0.0f, scaleDex, WHITE);
+        }
+
+        if (entityVisible && texEntidadeSprite.id)
+        {
+            float wEnt = texEntidadeSprite.width * scaleEnt;
+            float entY = (float)floorY - texEntidadeSprite.height * scaleEnt + 1.0f;
+            float entTargetX = (float)GetScreenWidth() * 0.75f - wEnt * 0.5f;
+            float entX = entTargetX;
+            if (entitySlideActive)
+            {
+                entitySlideX -= 420.0f * dt;
+                if (entitySlideX <= entTargetX)
+                {
+                    entitySlideX = entTargetX;
+                    entitySlideActive = false;
+                }
+                entX = entitySlideX;
+            }
+            if (entityBlinkActive)
+            {
+                entityBlinkTimer += dt;
+                if (entityBlinkTimer >= 0.12f)
+                {
+                    entityBlinkTimer -= 0.12f;
+                    entityBlinkVisible = !entityBlinkVisible;
+                    entityBlinkTogglesRemaining--;
+                    if (entityBlinkTogglesRemaining <= 0)
+                    {
+                        entityBlinkActive = false;
+                        entityBlinkVisible = true;
+                    }
+                }
+            }
+
+            if (!entityBlinkActive || entityBlinkVisible)
+            {
+                DrawTextureEx(texEntidadeSprite, (Vector2){entX, entY}, 0.0f, scaleEnt, WHITE);
+            }
+        }
     }
 }
 
@@ -489,6 +720,10 @@ static void gameplay(void)
     char guessStr[4] = ""; // up to 3 digits
 
     // Map and texture are pre-initialized at startup in main()
+    dexBlinkActive = true;
+    dexBlinkVisible = true;
+    dexBlinkTimer = 0.0f;
+    dexBlinkTogglesRemaining = 6;
 
     while (true)
     {
@@ -499,6 +734,7 @@ static void gameplay(void)
         {
             if (entity.health <= 0 && dex.health > 0)
             {
+                play_entity_defeat_sequence();
                 // Dex wins – show victory box for 3 seconds
                 victoryBox();
             }
@@ -515,14 +751,7 @@ static void gameplay(void)
         BeginDrawing();
         // Draw gameplay background with procedurally generated platforms
         draw_gameplay_background();
-        // Health displays (always visible)
-        char dexHealthStr[32];
-        sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 26, 20, 20, WHITE);
-        char entityHealthStr[32];
-        sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 26);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
+        draw_health_hud();
 
         // Centered black rectangle with white text and black border
         const int rectWidth = 500;
@@ -557,26 +786,31 @@ static void gameplay(void)
         {
             int guess = atoi(guessStr);
             // Record the guess
-            if (current_session.attempts_count < MAX_GUESSES) {
+            if (current_session.attempts_count < MAX_GUESSES)
+            {
                 current_session.guesses[current_session.attempts_count] = guess;
             }
             current_session.attempts_count++;
             // Track high/low bias
-            if (guess > target) {
+            if (guess > target)
+            {
                 current_session.high_count++;
-            } else if (guess < target) {
+            }
+            else if (guess < target)
+            {
                 current_session.low_count++;
             }
             lastGuess = guess;
             if (guess == target)
             {
                 // Correct guess: damage entity
-                if (firstCorrect) {
+                if (firstCorrect)
+                {
                     exibid_dial(dialogo[16]); // "Excelente! Você acertou um dos parâmetros. Mas isso ainda não é tudo!"
                     exibid_dial(dialogo[17]); // "Vamos ao próximo… - Zero"
                     firstCorrect = false;
                 }
-                entity.health -= 100;
+                entity.health -= 60;
                 warning("a entidade tomou dano!!");
                 // Reset for a new round
                 target = sortearNumero();
@@ -588,7 +822,8 @@ static void gameplay(void)
             else
             {
                 // Incorrect guess: show background and health for 4 seconds, then ask question
-                if (firstMistake) {
+                if (firstMistake)
+                {
                     // Show special dialog sequence on first mistake
                     exibid_dial(dialogo[18]);
                     exibid_dial(dialogo[19]);
@@ -646,14 +881,7 @@ static void perguntas(void)
         BeginDrawing();
         // Background for question screen: Use gameplay background (sky color + floor tiles)
         draw_gameplay_background();
-        // Health HUD
-        char dexHealthStr[32];
-        sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-        DrawText(dexHealthStr, 26, 20, 20, WHITE);
-        char entityHealthStr[32];
-        sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-        int eTextWidth = MeasureText(entityHealthStr, 26);
-        DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
+        draw_health_hud();
         // Central black box
         const int boxW = 600, boxH = 250;
         int boxX = (GetScreenWidth() - boxW) / 2;
@@ -709,7 +937,7 @@ static void perguntas(void)
     if (playerChoice != correctLower)
     {
         // Incorrect answer – apply damage to Dex and show warning box
-        dex.health -= 20;
+        dex.health -= 35;
         const char *correctText = "";
         switch (toupper(correctLower))
         {
@@ -730,7 +958,8 @@ static void perguntas(void)
             break;
         }
 
-        if (firstQuestionMistake) {
+        if (firstQuestionMistake)
+        {
             exibid_dial(dialogo[21]);
             firstQuestionMistake = false;
         }
@@ -743,14 +972,8 @@ static void perguntas(void)
             BeginDrawing();
             // Background for warning screen: Use gameplay background (sky color + floor tiles)
             draw_gameplay_background();
-            char dexHealthStr[32];
-            sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-            DrawText(dexHealthStr, 26, 20, 20, WHITE);
-            char entityHealthStr[32];
-            sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-            int eTextWidth = MeasureText(entityHealthStr, 26);
-            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
-            const char *msg1 = "dex recebeu 20 de dano!";
+            draw_health_hud();
+            const char *msg1 = "dex recebeu 35 de dano!";
             char msg2[128];
             sprintf(msg2, "a resposta da pergunta era (%c) %s", toupper(correctLower), correctText);
             int msgFontSize = 20;
@@ -775,8 +998,9 @@ static void perguntas(void)
     else
     {
         // Correct answer – show success box with hint about previous numeric guess
-        
-        if (firstQuestionCorrect) {
+
+        if (firstQuestionCorrect)
+        {
             exibid_dial(dialogo[22]);
             firstQuestionCorrect = false;
         }
@@ -788,13 +1012,7 @@ static void perguntas(void)
             BeginDrawing();
             // Background for success screen: Use gameplay background (sky color + floor tiles)
             draw_gameplay_background();
-            char dexHealthStr[32];
-            sprintf(dexHealthStr, "Vida do Dex: %d", dex.health);
-            DrawText(dexHealthStr, 26, 20, 20, WHITE);
-            char entityHealthStr[32];
-            sprintf(entityHealthStr, "Vida da Entidade: %d", entity.health);
-            int eTextWidth = MeasureText(entityHealthStr, 26);
-            DrawText(entityHealthStr, GetScreenWidth() - eTextWidth - 20, 26, 20, WHITE);
+            draw_health_hud();
             const char *msg1 = "Você acertou a pergunta!";
             char hint[128];
             if (lastGuess < lastTarget)
