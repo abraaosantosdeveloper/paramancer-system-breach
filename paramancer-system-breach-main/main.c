@@ -682,11 +682,29 @@ static void run_menu(Texture2D logoTexture,
 
             // Render background and stats screen.
             BeginDrawing();
-            // Clear to sky blue then draw background texture if available
             ClearBackground((Color){135, 206, 235, 255});
-            if (backgroundTexture.id != 0)
+            Texture2D statsLayers[3] = {menuSky, menuLayer1, menuLayer2};
+            for (int li = 0; li < 3; ++li)
             {
-                DrawTexture(backgroundTexture, 0, 0, WHITE);
+                if (statsLayers[li].id == 0)
+                    continue;
+                float scale = 1.0f;
+                if (statsLayers[li].width < screenWidth || statsLayers[li].height < screenHeight)
+                {
+                    float scaleW = (float)screenWidth / (float)statsLayers[li].width;
+                    float scaleH = (float)screenHeight / (float)statsLayers[li].height;
+                    scale = (scaleW > scaleH) ? scaleW : scaleH;
+                }
+                float destW = statsLayers[li].width * scale;
+                float destH = statsLayers[li].height * scale;
+                DrawTexturePro(statsLayers[li],
+                               (Rectangle){0.0f, 0.0f, (float)statsLayers[li].width, (float)statsLayers[li].height},
+                               (Rectangle){0.0f, 0.0f, destW, destH},
+                               (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            }
+            if (floorTexture.id != 0)
+            {
+                map_render_platforms(gameMap, floorTexture, 0.0f, 592.0f);
             }
 
             // Draw overall statistics summary at top.
@@ -754,7 +772,7 @@ static void run_menu(Texture2D logoTexture,
         // Render menu with scenario background layers.
         BeginDrawing();
         ClearBackground((Color){135, 206, 235, 255});
-        Texture2D layers[3] = {menuSky, menuLayer2, menuLayer1};
+        Texture2D layers[3] = {menuSky, menuLayer1, menuLayer2};
         bool drewLayer = false;
         for (int i = 0; i < 3; ++i)
         {

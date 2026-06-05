@@ -422,7 +422,7 @@ static void exibid_dial(const char *msg)
             return;
         UpdateMusicStream(bgm);
         BeginDrawing();
-        ClearBackground(GRAY);
+        draw_gameplay_background();
         draw_centered(msg);
         EndDrawing();
         if (IsKeyPressed(KEY_ENTER))
@@ -537,7 +537,14 @@ static void draw_gameplay_background(void)
     DrawRectangle(0, 0, screenW, screenH, (Color){135, 206, 235, 255});
 
     // Draw background layers with minimal scaling and subtle parallax
-    Texture2D layers[3] = {skyTexture, layer2Texture, layer1Texture};
+    // Order: sky → layer1 (distant, fog tint) → layer2 (close, full color)
+    Texture2D layers[3] = {skyTexture, layer1Texture, layer2Texture};
+    // Tints: sky = normal, layer1 = bluish fog (semi-transparent), layer2 = full opacity
+    Color layerTints[3] = {
+        WHITE,                       // sky
+        (Color){180, 210, 230, 160}, // layer1: distant, névoa azulada
+        WHITE                        // layer2: proxima, cor normal
+    };
     if (!bgOffsetsReady)
     {
         for (int i = 0; i < 3; ++i)
@@ -583,7 +590,7 @@ static void draw_gameplay_background(void)
         DrawTexturePro(layers[i],
                        (Rectangle){0.0f, 0.0f, (float)layers[i].width, (float)layers[i].height},
                        (Rectangle){offsetX, 0.0f, destW, destH},
-                       (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+                       (Vector2){0.0f, 0.0f}, 0.0f, layerTints[i]);
     }
     // Render the floor tiles anchored to the bottom
     // floor.png is 64×128 pixels
@@ -675,7 +682,7 @@ static void introducao(void)
                 return;
             UpdateMusicStream(bgm);
             BeginDrawing();
-            ClearBackground(GRAY);
+            draw_gameplay_background();
             draw_centered(sistema[i]);
             EndDrawing();
             // Advance when ENTER is pressed
@@ -693,7 +700,7 @@ static void introducao(void)
                 return;
             UpdateMusicStream(bgm);
             BeginDrawing();
-            ClearBackground(GRAY);
+            draw_gameplay_background();
             draw_centered(dialogo[i]);
             EndDrawing();
             if (IsKeyPressed(KEY_ENTER))
