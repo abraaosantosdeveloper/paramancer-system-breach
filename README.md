@@ -10,12 +10,6 @@
 
 # Sobre o Jogo
 ---
-## Protagonista: Dex
-![Personagem](/assets/game_arts/actors/dex_idle.png)
-## Antagonista: The Entity
-![Personagem](/assets/game_arts/actors/the_entity.png)
-
-
 ### História
 Dex é um jovem que ama matemática e estatística, e ele tem um dom extraordinário: enxergar padrões matemáticos em tudo. Dex começa a perceber
 falhas no seu mundo: como se a “matrix” estivesse corrompida. Ele descobre que há uma Entidade corruptora, uma IA que rouba parâmetros do universo e, por
@@ -25,23 +19,11 @@ estabilidade do seu universo.
 ## Fluxo do jogo
 A cada rodada, um número aleatório é gerado, e o jogador tem a chance de acertá-lo para ganhar o jogo. Caso nao obtenha sucesso, ele recebe uma pergunta com opçoes de respostas. Se acertar a pergunta, o jogador causa dano ao oponente e recebe uma dica em relaçao ao número gerado pelo sistema que ele está buscando acertar. Caso ele erre a pergunta feita, o personagem protagonista recebe dano, e o jogador ganha mais uma chance de acertar o número alvo, mas sem receber dicas sobre ele.
 
-### Mecânicas adjacentes
-> Isto é apenas um conceito; as imagens serão melhoradas.
+## Protagonista: Dex
+![Personagem](/assets/game_arts/actors/dex_idle.png)
 
-### Buffers
-**Buffer de Hp extra**
-![Buffer](/assets/game_arts/buffers/exta_hp.png)
-Ao receber, o usuário ganhará uma determinada quantidade de corações extras.
-
-**Buffer de Dano crítico**
-![Buffer](/assets/game_arts/buffers/critical.png)
-Com este buffer, o usuário dará o dobro de dano ao inimigo.
-
-
-**Buffer de Imunidade**
-![Buffer](/assets/game_arts/buffers/immunity.png)
-Com este buffer, ao errar uma pergunta caso o personagem não acerte o número (parâmetro) a ser advinhado, ele não perderá vida.
-
+## Antagonista: The Entity
+![Personagem](/assets/game_arts/actors/the_entity.png)
 
 # Informações técnicas
 
@@ -169,23 +151,25 @@ Eu, como jogador, quero ser capaz de continuar jogando quantas vezes eu quiser, 
 
 [Relatório Evolutivo do Gerenciamento do Projeto](https://docs.google.com/document/d/1tXrJkRwiRk7mcsrKFEbNX1feVAYsyZjU/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true) 
 
+[Quadro Kanban do Projeto](https://linear.app/paramancer/team/PAR/projects/all) 
+
 ## Semana 1
 ![Descrição da imagem](/assets/dev_assets/backlog.png)
 
 ![Descrição da imagem](./assets/dev_assets/quadro.png)   
 
-## Semana 10
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban1.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban2.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban3.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban4.png)
-![Quadro kanban de atividades](/assets/dev_assets/semana10-kanban5.png)
+## Semana 11
+![Quadro kanban de atividades](/assets/dev_assets/Kanban.png)
+
 
 ## Bugs encontrados
-![Bug encontrado](/assets/dev_assets/bug-tracker.png)
+![Bug encontrado](/assets/dev_assets/bug-tracker2.png)
+![Bug encontrado](/assets/dev_assets/bug-1.png)
+![Bug encontrado](/assets/dev_assets/bug-2.png)
+![Bug encontrado](/assets/dev_assets/bug-3.png)
 
 ## Programação em pares
-[Relatório de programação em pares](https://docs.google.com/document/d/19ISpTjszp7_rk7M5Xx2i9qyp2TZjJhZi/edit?usp=sharing&ouid=104903502508672858140&rtpof=true&sd=true)
+[Relatório de programação em pares](https://docs.google.com/document/d/1cGPPoYksjWoFUmMVgNJxq5wSW75drjS0dL9561KAz1w/edit?tab=t.0)
 ![Desenvolvedores programando em par](/assets/dev_assets/programacao-par.jpg)
 
 ### Em breve, mais conteúdo
