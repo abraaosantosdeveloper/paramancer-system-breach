@@ -23,6 +23,10 @@ static void garantir_pasta_dados(void)
 // Serializa uma sessao e salva no arquivo CSV.
 void salvar_sessao(Session s)
 {
+    // Do not save if the session was aborted (window closed)
+    if (s.aborted)
+        return;
+
     // Garante o diretorio antes de abrir o CSV.
     garantir_pasta_dados();
     // Modo "a" (append) abre para anexar. Se não existir, o C cria o arquivo. [cite: 133, 189]
@@ -33,8 +37,8 @@ void salvar_sessao(Session s)
         return;
     }
 
-    // Formato: timestamp;alvo;tentativas;baixos;altos;palpites_csv [cite: 123, 125]
-    fprintf(f, "%s;%d;%d;%d;%d;", s.timestamp, s.target, s.attempts_count, s.high_count, s.low_count);
+    // Formato: timestamp;alvo;tentativas;baixos;altos;aborted;palpites_csv [cite: 123, 125]
+    fprintf(f, "%s;%d;%d;%d;%d;%d;", s.timestamp, s.target, s.attempts_count, s.high_count, s.low_count, s.aborted);
 
     // Serializa os palpites como CSV dentro do campo final.
     for (int i = 0; i < s.attempts_count; i++)
@@ -67,12 +71,10 @@ int carregar_historico(Session sessoes[], int max_sessoes)
     while (fgets(linha, sizeof(linha), f) && count < max_sessoes)
     {
         Session *s = &sessoes[count];
-        // Note: sscanf simplificado para o exemplo de estrutura CSV [cite: 133]
-        char palpites_raw[512];
         // Le campos basicos; os palpites ficam no CSV mas nao sao expandidos aqui.
-        sscanf(linha, "%[^;];%d;%d;%d;%d;%s",
-               s->timestamp, &s->target, &s->attempts_count,
-               &s->high_count, &s->low_count, palpites_raw);
+        // Formato: timestamp;target;attempts;high;low;aborted;guesses
+        char palpites_raw[512];
+        sscanf(linha, "%[^;];%d;%d;%d;%d;%d;%[^\n]", s->timestamp, &s->target, &s->attempts_count, &s->high_count, &s->low_count, &s->aborted, palpites_raw);
 
         // Avanca para a proxima sessao.
         count++;

@@ -13,6 +13,7 @@ typedef struct Session
     int guesses[MAX_GUESSES]; // Palpites realizados.
     int low_count;            // Palpites abaixo do alvo.
     int high_count;           // Palpites acima do alvo.
+    int aborted; // 0 = not aborted, 1 = aborted
 } Session;
 
 // Estatisticas agregadas do historico.

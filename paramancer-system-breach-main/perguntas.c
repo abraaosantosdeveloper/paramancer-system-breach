@@ -60,12 +60,12 @@ int carregar_pergunta_por_id(int id, Pergunta *out)
         if (linha_atual != id)
             continue;
 
-        // Divide a linha CSV em 6 campos: enunciado, A, B, C, D, correta.
-        char *fields[6];
+        // Divide a linha CSV em 7 campos: enunciado, A, B, C, D, correta, info.
+        char *fields[7];
         int count = 0;
         char *token = strtok(linha, ",");
         // Tokeniza a linha pelos delimitadores.
-        while (token && count < 6)
+        while (token && count < 7)
         {
             fields[count++] = token;
             token = strtok(NULL, ",");
@@ -74,11 +74,12 @@ int carregar_pergunta_por_id(int id, Pergunta *out)
         // Fecha o arquivo assim que a linha alvo for lida.
         fclose(arquivo);
 
-        // Garante que todos os campos existam.
-        if (count < 6)
+        // Garante que todos os campos existam (precisamos de 7 campos).
+        if (count < 7)
             return 0;
 
-        // Copia os campos para a struct de saida.
+        // Copia os campos para a struct de saída.
+        // Remove possíveis quebras de linha do campo correto.
         trim_newline(fields[5]);
         copy_text(out->enunciado, sizeof(out->enunciado), fields[0]);
         copy_text(out->alt_a, sizeof(out->alt_a), fields[1]);
@@ -86,6 +87,8 @@ int carregar_pergunta_por_id(int id, Pergunta *out)
         copy_text(out->alt_c, sizeof(out->alt_c), fields[3]);
         copy_text(out->alt_d, sizeof(out->alt_d), fields[4]);
         out->correta = fields[5][0];
+        // Campo 6 (índice 6) contém a informação adicional da coluna 7.
+        copy_text(out->info, sizeof(out->info), fields[6]);
         return 1;
     }
 
