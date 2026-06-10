@@ -4,6 +4,10 @@
 
 [![Assista no YouTube](https://img.youtube.com/vi/2-2m1r7L2Js/0.jpg)](https://www.youtube.com/watch?v=2-2m1r7L2Js)
 
+## Guia para contribuição
+
+[Guia para contribuição](https://docs.google.com/document/d/1q3n14HzQERZHGMlloGIGoXtuxMXFq8EkitmHsTb8Iz8/edit?usp=sharing)
+
 # Sobre o Jogo
 ---
 ## Protagonista: Dex
