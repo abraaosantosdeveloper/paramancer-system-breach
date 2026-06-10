@@ -9,6 +9,7 @@
 #include "geracao.h"
 #include "map_render.h"
 #include "analise.h"
+#include <math.h>
 static Texture2D cidade = {0};
 static Texture2D menuSky = {0};
 static Texture2D menuLayer1 = {0};
@@ -322,7 +323,7 @@ static void draw_text_clipped_centered_no_outline(Font font,
 static void draw_stats_screen(Font titleFont,
                               Font bodyFont,
                               const Session *sessions,
-                              int sessionCount,
+                              int sessionCount,   // <-- novo parâmetro
                               int scrollIndex,
                               int rowsPerPage,
                               int screenWidth,
@@ -454,18 +455,32 @@ static void draw_stats_screen(Font titleFont,
         }
         EndScissorMode();
     }
+ if (sessionCount > rowsPerPage) {
+    const float SCROLLBAR_W = 12.0f;                 // largura da barra
+    // Área de fundo (fica ao lado direito da tabela)
+    Rectangle bg = {
+        layout.container.x + layout.container.width + 4.0f,
+        layout.container.y,
+        SCROLLBAR_W,
+        layout.container.height
+    };
 
-    // Draw the footer hint.
-    float footerX = (screenWidth - layout.footerSize.x) / 2.0f;
-    float footerY = (float)screenHeight - 24.0f - layout.footerSize.y;
-    draw_text_outlined(bodyFont,
-                       footer,
-                       (Vector2){footerX, footerY},
-                       (float)layout.footerFontSize,
-                       1.0f,
-                       TEXT_COLOR,
-                       OUTLINE_COLOR,
-                       2);
+    // Proporção de linhas visíveis
+    float visibleRatio = (float)rowsPerPage / (float)sessionCount;
+    float barH = layout.container.height * visibleRatio;
+
+    // Posição Y da "thumb" (a parte que se move)
+    float maxScroll   = (float)(sessionCount - rowsPerPage);
+    float scrollRatio = maxScroll > 0 ? (float)scrollIndex / maxScroll : 0.0f;
+    float barY = layout.container.y + (layout.container.height - barH) * scrollRatio;
+
+    Rectangle thumb = { bg.x, barY, SCROLLBAR_W, barH };
+
+    // Desenha fundo cinza claro e a thumb branca
+    DrawRectangleRec(bg,    Fade(GRAY, 0.3f));
+    DrawRectangleRec(thumb, Fade(WHITE, 0.8f));
+ }
+
 }
 
 // Runs the main menu loop, handling input, states, and rendering.
@@ -525,10 +540,12 @@ static void run_menu(Texture2D logoTexture,
     const float blinkInterval = 0.2f;
 
     // Stats screen data cache.
-    Session sessions[256];
-    int sessionCount = 0;
+    Session sessions[1024];
+    int sessionCount = 108;
     int statsScroll = 0;
     bool statsLoaded = false;
+    bool draggingScrollBar = false;
+    float dragOffsetY = 0.0f;   // distância do mouse ao topo da thumb quando o clique começou
 
     // Main loop runs until user closes or selects exit.
     while (state != gameOver && !WindowShouldClose())
@@ -642,8 +659,7 @@ static void run_menu(Texture2D logoTexture,
 
             // Compute aggregated statistics.
             Stats overallStats = {0};
-            if (sessionCount > 0)
-            {
+            if (sessionCount > 0) {
                 overallStats = processar_historico(sessions, sessionCount);
             }
 
@@ -664,6 +680,51 @@ static void run_menu(Texture2D logoTexture,
             {
                 statsScroll -= rowsPerPage;
             }
+        
+            
+        if (sessionCount > rowsPerPage) {
+    // Mesmo cálculo usado para desenhar a barra (mantém consistência)
+    const float SCROLLBAR_W = 12.0f;
+    Rectangle bg = {
+        layout.container.x + layout.container.width + 4.0f,
+        layout.container.y,
+        SCROLLBAR_W,
+        layout.container.height
+    };
+    float visibleRatio = (float)rowsPerPage / (float)sessionCount;
+    float barH = layout.container.height * visibleRatio;
+    float maxScroll = (float)(sessionCount - rowsPerPage);
+    float scrollRatio = maxScroll > 0 ? (float)statsScroll / maxScroll : 0.0f;
+    float barY = layout.container.y + (layout.container.height - barH) * scrollRatio;
+    Rectangle thumb = { bg.x, barY, SCROLLBAR_W, barH };
+
+    // Clique inicial
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), thumb)) {
+        draggingScrollBar = true;
+        dragOffsetY = GetMousePosition().y - thumb.y;
+    }
+
+    // Enquanto arrasta
+    if (draggingScrollBar && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        float mouseY = GetMousePosition().y - dragOffsetY;
+        // Converte a posição Y da thumb de volta para índice de scroll
+        float newRatio = (mouseY - layout.container.y) / (layout.container.height - barH);
+        newRatio = fmaxf(0.0f, fminf(1.0f, newRatio));   // clamp 0‑1
+        statsScroll = (int)(newRatio * maxScroll);
+    }
+
+    // Solta o botão
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+        draggingScrollBar = false;
+    }
+}    
+
+            
+            /* Mouse wheel – rola a lista (valores positivos rolam para cima) */
+        float wheel = GetMouseWheelMove();          // +1 = roda para cima, -1 = para baixo
+        if (wheel != 0.0f) {
+            statsScroll -= (int)wheel;              // invertido porque rolar para cima diminui o índice
+        }
 
             // Clamp scroll to available rows.
             int maxScroll = sessionCount - rowsPerPage;
@@ -682,6 +743,7 @@ static void run_menu(Texture2D logoTexture,
 
             // Render background and stats screen.
             BeginDrawing();
+            // Clear to sky blue then draw background texture if available
             ClearBackground((Color){135, 206, 235, 255});
             Texture2D statsLayers[3] = {menuSky, menuLayer1, menuLayer2};
             for (int li = 0; li < 3; ++li)
@@ -746,7 +808,7 @@ static void run_menu(Texture2D logoTexture,
             layout.headerRow.y += extraShift;
             layout.rowsClip.y += extraShift;
 
-            draw_stats_screen(uiFontBold, uiFontLight, sessions, sessionCount, statsScroll, rowsPerPage, screenWidth, screenHeight);
+            draw_stats_screen(uiFontBold, uiFontLight,sessions,sessionCount,statsScroll,rowsPerPage,screenWidth,screenHeight);
             EndDrawing();
             continue;
         }
@@ -769,7 +831,7 @@ static void run_menu(Texture2D logoTexture,
             }
         }
 
-        // Render menu with scenario background layers.
+        // Render menu with floor background.
         BeginDrawing();
         ClearBackground((Color){135, 206, 235, 255});
         Texture2D layers[3] = {menuSky, menuLayer1, menuLayer2};
@@ -927,6 +989,7 @@ int main(void)
 
     // Load and start background music.
     bgm = LoadMusicStream("assets/audio/soundtrack.mp3");
+    SetMusicVolume(bgm, 0.5f);
     PlayMusicStream(bgm);
 
     // Load textures required by the menu.

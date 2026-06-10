@@ -14,6 +14,7 @@ typedef struct
     char alt_c[MAX_TEXTO_ALTERNATIVA];  // Alternativa C.
     char alt_d[MAX_TEXTO_ALTERNATIVA];  // Alternativa D.
     char correta;                       // Letra da alternativa correta.
+    char info[256];                     // Coluna extra (explicação ou detalhe).
 } Pergunta;
 
 // Carrega a pergunta pelo indice (linha) no CSV.
