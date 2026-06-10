@@ -10,6 +10,9 @@
 #include "map_render.h"
 #include "analise.h"
 static Texture2D cidade = {0};
+static Texture2D menuSky = {0};
+static Texture2D menuLayer1 = {0};
+static Texture2D menuLayer2 = {0};
 
 // Simple state machine for the main menu flow.
 // duplicate removed - using earlier definition
@@ -639,7 +642,8 @@ static void run_menu(Texture2D logoTexture,
 
             // Compute aggregated statistics.
             Stats overallStats = {0};
-            if (sessionCount > 0) {
+            if (sessionCount > 0)
+            {
                 overallStats = processar_historico(sessions, sessionCount);
             }
 
@@ -678,10 +682,29 @@ static void run_menu(Texture2D logoTexture,
 
             // Render background and stats screen.
             BeginDrawing();
-            // Clear to sky blue then draw background texture if available
             ClearBackground((Color){135, 206, 235, 255});
-            if (backgroundTexture.id != 0) {
-                DrawTexture(backgroundTexture, 0, 0, WHITE);
+            Texture2D statsLayers[3] = {menuSky, menuLayer1, menuLayer2};
+            for (int li = 0; li < 3; ++li)
+            {
+                if (statsLayers[li].id == 0)
+                    continue;
+                float scale = 1.0f;
+                if (statsLayers[li].width < screenWidth || statsLayers[li].height < screenHeight)
+                {
+                    float scaleW = (float)screenWidth / (float)statsLayers[li].width;
+                    float scaleH = (float)screenHeight / (float)statsLayers[li].height;
+                    scale = (scaleW > scaleH) ? scaleW : scaleH;
+                }
+                float destW = statsLayers[li].width * scale;
+                float destH = statsLayers[li].height * scale;
+                DrawTexturePro(statsLayers[li],
+                               (Rectangle){0.0f, 0.0f, (float)statsLayers[li].width, (float)statsLayers[li].height},
+                               (Rectangle){0.0f, 0.0f, destW, destH},
+                               (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            }
+            if (floorTexture.id != 0)
+            {
+                map_render_platforms(gameMap, floorTexture, 0.0f, 592.0f);
             }
 
             // Draw overall statistics summary at top.
@@ -746,10 +769,51 @@ static void run_menu(Texture2D logoTexture,
             }
         }
 
-        // Render menu with floor background.
+        // Render menu with scenario background layers.
         BeginDrawing();
-        // Use dark blue background for the menu.
-        ClearBackground((Color){0, 0, 139, 255}); // dark blue
+        ClearBackground((Color){135, 206, 235, 255});
+        Texture2D layers[3] = {menuSky, menuLayer1, menuLayer2};
+        bool drewLayer = false;
+        for (int i = 0; i < 3; ++i)
+        {
+            if (layers[i].id == 0)
+            {
+                continue;
+            }
+
+            float scale = 1.0f;
+            if (layers[i].width < screenWidth || layers[i].height < screenHeight)
+            {
+                float scaleW = (float)screenWidth / (float)layers[i].width;
+                float scaleH = (float)screenHeight / (float)layers[i].height;
+                scale = (scaleW > scaleH) ? scaleW : scaleH;
+            }
+
+            float destW = layers[i].width * scale;
+            float destH = layers[i].height * scale;
+            DrawTexturePro(layers[i],
+                           (Rectangle){0.0f, 0.0f, (float)layers[i].width, (float)layers[i].height},
+                           (Rectangle){0.0f, 0.0f, destW, destH},
+                           (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+            drewLayer = true;
+        }
+        if (!drewLayer && backgroundTexture.id != 0)
+        {
+            float scale = 1.0f;
+            if (backgroundTexture.width < screenWidth || backgroundTexture.height < screenHeight)
+            {
+                float scaleW = (float)screenWidth / (float)backgroundTexture.width;
+                float scaleH = (float)screenHeight / (float)backgroundTexture.height;
+                scale = (scaleW > scaleH) ? scaleW : scaleH;
+            }
+
+            float destW = backgroundTexture.width * scale;
+            float destH = backgroundTexture.height * scale;
+            DrawTexturePro(backgroundTexture,
+                           (Rectangle){0.0f, 0.0f, (float)backgroundTexture.width, (float)backgroundTexture.height},
+                           (Rectangle){0.0f, 0.0f, destW, destH},
+                           (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        }
         // Render tiled floor at the bottom (20 tiles × 1 row = 1280px width × 128px height)
         // Position at Y = 592 to anchor floor at bottom of 720px screen (720 - 128 = 592)
         if (floorTexture.id != 0)
@@ -849,6 +913,13 @@ int main(void)
     {
         fprintf(stderr, "[WARNING] Could not load background texture. Using solid color.\n");
     }
+    menuSky = LoadTexture("assets/game_arts/scenario/City background sky.png");
+    menuLayer1 = LoadTexture("assets/game_arts/scenario/City background layer1.png");
+    menuLayer2 = LoadTexture("assets/game_arts/scenario/City background layer2.png");
+    if (menuSky.id == 0 || menuLayer1.id == 0 || menuLayer2.id == 0)
+    {
+        fprintf(stderr, "[WARNING] Could not load one or more menu background layers.\n");
+    }
     if (floorTexture.id == 0)
     {
         fprintf(stderr, "[WARNING] Could not load floor texture. Menu will use solid background.\n");
@@ -888,6 +959,18 @@ int main(void)
 
     // Cleanup texture resources.
     UnloadTexture(floorTexture);
+    if (menuSky.id)
+    {
+        UnloadTexture(menuSky);
+    }
+    if (menuLayer1.id)
+    {
+        UnloadTexture(menuLayer1);
+    }
+    if (menuLayer2.id)
+    {
+        UnloadTexture(menuLayer2);
+    }
     UnloadMusicStream(bgm);
     unload_menu_textures(logoTexture);
     CloseAudioDevice();
