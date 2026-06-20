@@ -28,6 +28,7 @@ static bool firstMistake = true;
 static bool firstCorrect = true;
 static bool firstQuestionMistake = true;
 static bool firstQuestionCorrect = true;
+static bool parouimpar = false;
 
 // Global resources (provided by main.c)
 extern Music bgm;
@@ -75,7 +76,6 @@ static Texture2D heartFullBlue = {0};
 static Texture2D heartHalfBlue = {0};
 static Texture2D heartEmpty = {0};
 
-
 static void load_actor_textures(void)
 {
     // Load Dex sprite and make black background transparent
@@ -116,7 +116,6 @@ static void load_actor_textures(void)
     entityBlinkTogglesRemaining = 0;
 }
 
-
 // Unload actor textures – called on graceful shutdown
 static void unload_actor_textures(void)
 {
@@ -152,10 +151,13 @@ static void unload_actor_textures(void)
 // Helper: return the correct texture for the speaker based on the dialog line
 static Texture2D get_speaker_texture(const char *msg)
 {
-    if (strstr(msg, "- Dex") != NULL)        return texDex;
-    if (strstr(msg, "- Zero") != NULL)       return texZero;
+    if (strstr(msg, "- Dex") != NULL)
+        return texDex;
+    if (strstr(msg, "- Zero") != NULL)
+        return texZero;
     if (strstr(msg, "- The Entity") != NULL ||
-        strstr(msg, "- The entity") != NULL) return texEntity;
+        strstr(msg, "- The entity") != NULL)
+        return texEntity;
     return (Texture2D){0}; // no portrait
 }
 
@@ -263,24 +265,24 @@ static const char *dialogo[] = {
     "Dex, se concentra. Não deixe a entidade tirar sua atenção. Tenta novamente! - Zero ",
     "Excelente! Mas isso ainda não é tudo. Precisamos tentar adivinhar o parâmetro novamente... - Zero ",
     "O que está havendo?! C... Como você pode ter me vencido?! - The Entity",
-    "Parece que você não obteve êxito no seu plano... - Dex" ,
-    "Conseguimos! Eu vou destruí-la de uma vez por todas, de dentro para fora. Já restaurei os parâmetros e agora vou desativar os servidores que alimentam esse monstro! - Zero", 
-    "Nãaaaaaoooo! Malditos! - The Entity", 
-    "Consegui desativar! - Zero", 
+    "Parece que você não obteve êxito no seu plano... - Dex",
+    "Conseguimos! Eu vou destruí-la de uma vez por todas, de dentro para fora. Já restaurei os parâmetros e agora vou desativar os servidores que alimentam esse monstro! - Zero",
+    "Nãaaaaaoooo! Malditos! - The Entity",
+    "Consegui desativar! - Zero",
     "Isso! Conseguimos! - Dex ",
     "Parece que vocês não são tão espertos quanto pensam. Não conseguiram me parar, e nunca alcançarão este feito! - The entity ",
-    "Droga! - Dex" ,
-    "Não podemos fazer mais nada, a entidade conseguiu fechar as brechas de segurança que usei para invadir os servidores... - Zero ", 
-    "Eu não acredito! - Dex ", 
-    "Ninguém irá me impedir de dominar o universo. - The entity ", 
+    "Droga! - Dex",
+    "Não podemos fazer mais nada, a entidade conseguiu fechar as brechas de segurança que usei para invadir os servidores... - Zero ",
+    "Eu não acredito! - Dex ",
+    "Ninguém irá me impedir de dominar o universo. - The entity ",
     "Adeus! - The entity",
 };
 
 int player_mistake = 0;
-bool parOuImpar=false;
+bool parOuImpar = false;
 
- static Rectangle sair(void);
- 
+static Rectangle sair(void);
+
 static Rectangle sair(void)
 {
     // Define button dimensions (70% size)
@@ -302,9 +304,7 @@ static Rectangle sair(void)
     DrawText(label, textX, textY, fontSize, BLACK);
 
     return btn;
-
 }
-
 
 // Forward declarations for helper functions
 static void draw_gameplay_background(void);
@@ -350,21 +350,18 @@ static void draw_centered(const char *text)
 
     // Adjust font size if text would overflow the screen
     const int padding = 8;
-    const int spriteSpace = 64; // reserve space on the right for character sprite
+    const int spriteSpace = 64;                                       // reserve space on the right for character sprite
     int maxWidth = GetScreenWidth() - 2 * padding - spriteSpace - 20; // 20px margin
     int txtWidth = MeasureText(text, fontSize);
     if (txtWidth > maxWidth && txtWidth > 0)
     {
         // Scale font down proportionally to fit within maxWidth
         fontSize = (int)(fontSize * (float)maxWidth / (float)txtWidth);
-    fontSize = (int)(fontSize * 1.03f);
+        fontSize = (int)(fontSize * 1.03f);
         txtWidth = MeasureText(text, fontSize);
     }
 
-
-
-
-// Determine if a speaker texture is available
+    // Determine if a speaker texture is available
     Texture2D speakerTex = get_speaker_texture(text);
     bool hasSpeaker = (speakerTex.id != 0);
 
@@ -405,7 +402,7 @@ static void draw_centered(const char *text)
         textX = rectX + extra + padding; // left side
     else
         textX = rectX + extra + (rectWidth - 2 * extra - txtWidth) / 2; // centered horizontally
-    int textY = rectY + extra + (effectiveHeight - fontSize) / 2; // vertically centered
+    int textY = rectY + extra + (effectiveHeight - fontSize) / 2;       // vertically centered
     DrawText(text, textX, textY, fontSize, WHITE);
 
     // Draw speaker texture if present
@@ -424,7 +421,11 @@ static void warning(const char *msg)
 {
     while (true)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background with procedurally generated platforms
@@ -458,7 +459,11 @@ static void exibid_dial(const char *msg)
 {
     while (true)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         UpdateMusicStream(bgm);
         BeginDrawing();
         draw_gameplay_background();
@@ -472,15 +477,19 @@ static void exibid_dial(const char *msg)
 // Victory box displayed when Dex wins
 static void victoryBox(void)
 {
-    exibid_dial(dialogo[23]); 
-    exibid_dial(dialogo[24]); 
-    exibid_dial(dialogo[25]); 
-    exibid_dial(dialogo[26]); 
-    exibid_dial(dialogo[27]); 
-    exibid_dial(dialogo[28]); 
+    exibid_dial(dialogo[23]);
+    exibid_dial(dialogo[24]);
+    exibid_dial(dialogo[25]);
+    exibid_dial(dialogo[26]);
+    exibid_dial(dialogo[27]);
+    exibid_dial(dialogo[28]);
     while (true)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background with procedurally generated platforms
@@ -536,7 +545,11 @@ static void defeatBox(void)
     exibid_dial(dialogo[34]);
     while (true)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background with procedurally generated platforms
@@ -751,9 +764,11 @@ static void introducao(void)
 // Simple gameplay: guess a number between 1 and 100
 static void perguntas(void);
 
-
 static void gameplay(void)
 {
+    dex.health = 100;
+    entity.health = 100;
+    parOuImpar = false;
     // Initialize a session record for this round
     memset(&current_session, 0, sizeof(current_session));
     time_t now = time(NULL);
@@ -773,7 +788,11 @@ static void gameplay(void)
 
     while (true)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         // Interrupt if any character health reaches zero
         if (dex.health <= 0 || entity.health <= 0)
         {
@@ -796,7 +815,7 @@ static void gameplay(void)
         BeginDrawing();
         // Draw gameplay background with procedurally generated platforms
         draw_gameplay_background();
-         draw_health_hud();
+        draw_health_hud();
 
         // Centered black rectangle with white text and black border
         const int rectWidth = 500;
@@ -807,9 +826,10 @@ static void gameplay(void)
         DrawRectangleRec(rect, BLACK);
         DrawRectangleLinesEx(rect, 4, WHITE);
         Rectangle btn = sair();
-        if (CheckCollisionPointRec(GetMousePosition(), btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            current_session.aborted = 1;   
-            return; 
+        if (CheckCollisionPointRec(GetMousePosition(), btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        {
+            current_session.aborted = 1;
+            return;
         }
         const char *prompt = "Digite um número (1-100) e pressione ENTER:";
         int promptFontSize = 20;
@@ -836,21 +856,26 @@ static void gameplay(void)
         {
             int guess = atoi(guessStr);
             // Record the guess
-            if (current_session.attempts_count < MAX_GUESSES) {
+            if (current_session.attempts_count < MAX_GUESSES)
+            {
                 current_session.guesses[current_session.attempts_count] = guess;
             }
             current_session.attempts_count++;
             // Track high/low bias
-            if (guess > target) {
+            if (guess > target)
+            {
                 current_session.high_count++;
-            } else if (guess < target) {
+            }
+            else if (guess < target)
+            {
                 current_session.low_count++;
             }
             lastGuess = guess;
             if (guess == target)
             {
                 // Correct guess: damage entity
-                if (firstCorrect) {
+                if (firstCorrect)
+                {
                     exibid_dial(dialogo[16]); // "Excelente! Você acertou um dos parâmetros. Mas isso ainda não é tudo!"
                     exibid_dial(dialogo[17]); // "Vamos ao próximo… - Zero"
                     firstCorrect = false;
@@ -867,7 +892,8 @@ static void gameplay(void)
             else
             {
                 // Incorrect guess: show background and health for 4 seconds, then ask question
-                if (firstMistake) {
+                if (firstMistake)
+                {
                     // Show special dialog sequence on first mistake
                     exibid_dial(dialogo[18]);
                     exibid_dial(dialogo[19]);
@@ -921,7 +947,11 @@ static void perguntas(void)
     bool answered = false;
     while (!answered)
     {
-        if (WindowShouldClose()) { current_session.aborted = 1; return; }
+        if (WindowShouldClose())
+        {
+            current_session.aborted = 1;
+            return;
+        }
         UpdateMusicStream(bgm);
         BeginDrawing();
         // Background for question screen: Use gameplay background (sky color + floor tiles)
@@ -942,13 +972,16 @@ static void perguntas(void)
         int lineY = boxY + 20;
         // Wrap enunciado into two lines if needed
         const int maxTextWidth = boxW - 40; // padding 20 on each side
-        if (MeasureText(p.enunciado, fontSize) > maxTextWidth) {
+        if (MeasureText(p.enunciado, fontSize) > maxTextWidth)
+        {
             // Find split point near middle
             int splitIdx = strlen(p.enunciado) / 2;
-            while (splitIdx > 0 && p.enunciado[splitIdx] != ' ') {
+            while (splitIdx > 0 && p.enunciado[splitIdx] != ' ')
+            {
                 splitIdx--;
             }
-            if (splitIdx == 0) splitIdx = strlen(p.enunciado) / 2;
+            if (splitIdx == 0)
+                splitIdx = strlen(p.enunciado) / 2;
             char firstPart[256];
             char secondPart[256];
             strncpy(firstPart, p.enunciado, splitIdx);
@@ -957,7 +990,9 @@ static void perguntas(void)
             DrawText(firstPart, boxX + 20, lineY, fontSize, WHITE);
             lineY += fontSize + 5;
             DrawText(secondPart, boxX + 20, lineY, fontSize, WHITE);
-        } else {
+        }
+        else
+        {
             DrawText(p.enunciado, boxX + 20, lineY, fontSize, WHITE);
         }
         lineY += fontSize + 10;
@@ -1025,7 +1060,8 @@ static void perguntas(void)
             break;
         }
 
-        if (firstQuestionMistake) {
+        if (firstQuestionMistake)
+        {
             exibid_dial(dialogo[21]);
             firstQuestionMistake = false;
         }
@@ -1049,8 +1085,10 @@ static void perguntas(void)
             int width2 = MeasureText(msg2, msgFontSize);
             int widthInfo = MeasureText(infoText, msgFontSize);
             int maxW = width1;
-            if (width2 > maxW) maxW = width2;
-            if (widthInfo > maxW) maxW = widthInfo;
+            if (width2 > maxW)
+                maxW = width2;
+            if (widthInfo > maxW)
+                maxW = widthInfo;
             const int pad = 8;
             int boxW = maxW + 2 * pad;
             // Render extra info (single line)
@@ -1076,8 +1114,9 @@ static void perguntas(void)
     else
     {
         // Correct answer – show success box with hint about previous numeric guess
-        
-        if (firstQuestionCorrect) {
+
+        if (firstQuestionCorrect)
+        {
             exibid_dial(dialogo[22]);
             firstQuestionCorrect = false;
         }
@@ -1092,20 +1131,21 @@ static void perguntas(void)
             draw_health_hud();
             const char *msg1 = "Você acertou a pergunta!";
             char hint[128];
-            
-            if (player_mistake >= 4 && parOuImpar==false) 
-            {   if (lastTarget % 2 == 0)
+
+            if (player_mistake >= 4 && parOuImpar == true)
+            {
+                if (lastTarget % 2 == 0)
                 {
-                strcpy(hint, "o numero alvo é par");
-                bool ParOuImpar=true;
+                    strcpy(hint, "o numero alvo é par");
+                    bool ParOuImpar = true;
                 }
                 else
-                {                
-                strcpy(hint, "o numero alvo é impar");
-                bool ParOuImpar=true;
+                {
+                    strcpy(hint, "o numero alvo é impar");
+                    bool ParOuImpar = true;
                 }
             }
-            
+
             else if (lastGuess < lastTarget)
             {
                 strcpy(hint, "Dica: o número que você chutou era muito baixo.");
